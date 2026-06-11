@@ -456,6 +456,7 @@ export function readSleepiness() {
     datetime: new Date().toISOString(),
     level: getRating('alertness'),
     note: $('#sleep-note').value.trim() || null,
+    _v2: true, // already on the alertness scale; never auto-invert
     updatedAt: new Date().toISOString(),
   };
 }

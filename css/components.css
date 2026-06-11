@@ -256,11 +256,11 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 /* ---- Responsive overrides (kept in this file, after the component base styles,
         so they win the cascade over the earlier-loaded layout.css) ---- */
 
-/* Calendar + check-ins side by side once there's room (tablet/desktop). */
+/* Calendar + check-ins side by side once there's room (tablet/desktop), equal height. */
 @media (min-width: 700px) {
-  .log-top { flex-direction: row; align-items: flex-start; }
-  .log-top .log-controls { flex: 0 0 300px; }
-  .log-top .checkins { flex: 1 1 auto; align-self: stretch; }
+  .log-top { flex-direction: row; align-items: stretch; }
+  .log-top .log-controls { flex: 0 0 300px; margin-bottom: 0; }
+  .log-top .checkins { flex: 1 1 auto; }
 }
 
 /* Phones: one field per row so adjacent inputs never crowd/overlap. */

@@ -107,7 +107,7 @@ function renderCheckins() {
       const datetime = wallToUTC(date, time, tz);
       store.addSleepiness({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        datetime, level: 5, note: null, updatedAt: new Date().toISOString(),
+        datetime, level: 5, note: null, _v2: true, updatedAt: new Date().toISOString(),
       });
       renderCheckins();
       renderSummaryView();
@@ -121,7 +121,7 @@ function refreshMonthView() {
   renderCalendar();
   renderCheckins();
   if (sync.hasToken() && sync.isOnline()) {
-    sync.pullMonth(calMonth).then(() => { renderCalendar(); renderCheckins(); }).catch(() => {});
+    sync.pullMonth(calMonth).then(() => { store.migrateScales(); renderCalendar(); renderCheckins(); }).catch(() => {});
   }
 }
 
@@ -177,7 +177,8 @@ async function backgroundSync() {
     await sync.pullSettings();
     settings = store.getSettings();
     await sync.pullMonth(monthKeyOf(todayISO()));
-    await sync.flushDirty();
+    store.migrateScales();   // convert any just-pulled old-scale records
+    await sync.flushDirty();  // ...and push the conversions back
     renderSummaryView();
     renderCalendar();
     renderCheckins();
@@ -385,7 +386,7 @@ function wire() {
 }
 
 function init() {
-  store.migrateScalesOnce(); // one-time fix for old (flipped) records
+  store.migrateScales(); // fix old (flipped) records; idempotent, re-runs after syncs
   ui.setDaypartTheme();
   ui.startMottos(settings.mottos);
   wire();
