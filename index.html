@@ -42,6 +42,17 @@
                 title="What the diary suggests">?</button>
       </div>
       <div class="card comments" id="summaryComments" hidden></div>
+
+      <div class="card ask-ai">
+        <h3 class="form-section">Ask an AI about your sleep</h3>
+        <textarea id="aiQuestion" rows="2" placeholder="e.g. Why do I wake up so often, and what should I try first?"></textarea>
+        <div class="ask-actions">
+          <button type="button" class="btn primary" id="aiCopy">Copy prompt for AI</button>
+          <button type="button" class="btn ghost" id="aiDownload">Download JSON</button>
+        </div>
+        <p class="hint">Copies a ready-to-paste prompt (your question + diary data) to the clipboard. Dates are pseudonymized; your token and location are never included. Paste it into any AI chat.</p>
+      </div>
+
       <div class="cards" id="summaryCards"></div>
       <div class="chart-grid">
         <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
@@ -189,6 +200,10 @@
           </label>
           <label class="field"><span>Manual temp (°C)</span><input type="number" id="f-manual-temp" step="0.1" inputmode="decimal" /></label>
         </div>
+
+        <h3 class="form-section">AI prompt (context for “Ask an AI”)</h3>
+        <p class="hint">This persona/goal text is sent at the top of the AI prompt. Edit it to focus the assistant on what you care about.</p>
+        <label class="field"><span>Prompt</span><textarea id="f-ai-prompt" rows="4"></textarea></label>
 
         <h3 class="form-section">Experiment (track one factor)</h3>
         <label class="field checkbox"><input type="checkbox" id="f-exp-active" /><span>Experiment active</span></label>

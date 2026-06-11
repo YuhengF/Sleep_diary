@@ -395,6 +395,7 @@ export function fillSettings(settings, hasToken) {
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
   $('#f-loc-mode').value = settings.location.mode || 'geo';
   $('#f-manual-temp').value = settings.location.manualTempC ?? '';
+  $('#f-ai-prompt').value = settings.aiPrompt || '';
   $('#f-exp-active').checked = !!settings.experiment.active;
   $('#f-exp-factor').value = settings.experiment.factor;
   $('#f-exp-outcome').value = settings.experiment.outcome || 'quality';
@@ -409,6 +410,7 @@ export function readSettings(prev) {
   const tMax = parseFloat($('#f-target-max').value);
   return {
     ...prev,
+    aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
     defaults: {
       alarmTime: $('#f-default-alarm').value || '08:00',
       targetTstMin: Math.round((isNaN(tMin) ? 8.5 : tMin) * 60),

@@ -4,6 +4,7 @@ import * as sync from './github-sync.js';
 import * as ui from './ui.js';
 import * as charts from './charts.js';
 import { resolveBedroomTemp } from './weather.js';
+import * as ai from './ai-export.js';
 import { summarize, correlate, comments } from './stats.js';
 import { monthKeyOf, todayISO, debounce } from './util.js';
 
@@ -290,6 +291,19 @@ function onSaveSleepiness() {
   syncAfterWrite(monthKeyOf(log.datetime.slice(0, 10)));
 }
 
+async function onAiCopy() {
+  const q = document.getElementById('aiQuestion').value.trim();
+  const text = ai.buildPrompt(q, settings);
+  const ok = await ai.copyText(text);
+  ui.toast(ok ? 'Prompt copied — paste into any AI chat' : 'Copy failed — use Download JSON instead', ok ? 'success' : 'error');
+}
+
+function onAiDownload() {
+  const q = document.getElementById('aiQuestion').value.trim();
+  ai.downloadJSON(q, settings);
+  ui.toast('Downloaded sleep-diary-for-ai.json', 'success');
+}
+
 function toggleAttrib() {
   const text = document.getElementById('attribText');
   const btn = document.getElementById('attribToggle');
@@ -332,6 +346,8 @@ function wire() {
   on('btn-save-settings', 'click', onSaveSettings);
   on('commentsToggle', 'click', toggleComments);
   on('attribToggle', 'click', toggleAttrib);
+  on('aiCopy', 'click', onAiCopy);
+  on('aiDownload', 'click', onAiDownload);
   on('f-no-alarm', 'change', ui.onAlarmToggle);
 
   // Live TST recompute + bedtime/onset day hints.

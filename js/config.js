@@ -39,11 +39,21 @@ export const RATING_MIN = 1;
 export const RATING_MAX = 10;
 export const RATING_DEFAULT = 5; // neutral midpoint for new entries
 
+// Default persona/goal prompt for the "Ask AI" export (user-editable in Settings).
+export const DEFAULT_AI_PROMPT =
+  'You are an experienced sleep physician analyzing my personal sleep diary (an N-of-1 ' +
+  'experiment). Identify patterns and likely causes affecting my sleep onset, quality, ' +
+  'duration, night awakenings, and morning alertness. Point out which factors (melatonin ' +
+  'dose/timing, light, exercise, dinner, caffeine, bedtime regularity, bedroom temperature, ' +
+  'naps) seem to help or hurt, cite the specific days/metrics that support each point, and ' +
+  'suggest concrete one-factor-at-a-time experiments to try next.';
+
 // Defaults applied to new entries / fresh settings.
 export const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   defaults: { alarmTime: '08:00', targetTstMin: 510, targetTstMax: 540 }, // 8.5–9h
   location: { mode: 'geo', lat: null, lon: null, manualTempC: null },
+  aiPrompt: DEFAULT_AI_PROMPT,
   experiment: {
     active: false,
     factor: 'melatonin.doseMg',
