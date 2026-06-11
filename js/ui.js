@@ -100,6 +100,7 @@ export function fillForm(entry, settings) {
   setRating('grogginess1h', e.grogginess1h ?? RATING_DEFAULT);
   $('#f-bedtime').value = e.bedtime || '';
   $('#f-onset').value = e.sleepOnset || '';
+  updateNightTimes();
 
   const manual = e.tstSource === 'entered';
   $('#f-tst-override').checked = manual;
@@ -177,7 +178,8 @@ export function updateDateNotice() {
   if (date) {
     const prev = addDays(date, -1);
     if (secM) secM.innerHTML = `☀️ This morning · <span class="sec-date">${formatNice(date)}</span>`;
-    if (secN) secN.innerHTML = `🌙 Yesterday &amp; bedtime · <span class="sec-date">${formatNice(prev)}</span>`;
+    if (secN) secN.innerHTML = `🌙 Last evening &amp; night · <span class="sec-date">${formatNice(prev)} → ${formatNice(date)}</span>`;
+    updateNightTimes();
     if (el) el.innerHTML =
       `<span class="dn-icon">🌙</span> Covers the night of <strong>${formatNice(prev)}</strong> ` +
       `→ <span class="dn-icon">☀️</span> morning of <strong>${formatNice(date)}</strong>.<br>` +
@@ -201,6 +203,66 @@ export function setMode(mode, date) {
       : `<span class="mode-icon">✚</span> New entry · <strong>${formatNice(date)}</strong>`;
   }
   if (saveBtn) saveBtn.textContent = editing ? 'Update entry' : 'Save entry';
+}
+
+// Show which calendar day bedtime / last-attempt actually fall on. A time at/after
+// noon is the previous evening; before noon is the early hours of the wake-up day —
+// so a 2:00 bedtime correctly reads as "this morning", not yesterday.
+export function updateNightTimes() {
+  const date = $('#f-date').value;
+  const resolve = (hhmm) => {
+    const min = toMinutes(hhmm);
+    if (date === '' || min == null) return '';
+    return formatNice(min >= 720 ? addDays(date, -1) : date);
+  };
+  const b = $('#bedtimeDay'), o = $('#onsetDay');
+  if (b) b.textContent = resolve($('#f-bedtime').value);
+  if (o) o.textContent = resolve($('#f-onset').value);
+}
+
+// Month calendar that dots days with entries; tap a day to load it. Navigation +
+// selection are driven by `handlers` (the controller owns the state).
+const DOW = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+export function renderCalendar(container, monthKey, selectedDate, entryDates, handlers) {
+  if (!container) return;
+  const [y, m] = monthKey.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const today = todayISO();
+  const title = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<span class="cal-cell empty"></span>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${monthKey}-${String(d).padStart(2, '0')}`;
+    const cls = ['cal-cell', 'cal-day'];
+    if (entryDates.has(iso)) cls.push('has-entry');
+    if (iso === selectedDate) cls.push('selected');
+    if (iso === today) cls.push('today');
+    cells += `<button type="button" class="${cls.join(' ')}" data-date="${iso}">${d}<span class="cal-dot"></span></button>`;
+  }
+
+  container.innerHTML =
+    `<div class="cal-head">
+       <button type="button" class="btn ghost icon" data-cal="prev" aria-label="Previous month">‹</button>
+       <div class="cal-title">${title}</div>
+       <button type="button" class="btn ghost icon" data-cal="next" aria-label="Next month">›</button>
+       <button type="button" class="btn ghost small" data-cal="today">Today</button>
+     </div>
+     <div class="cal-dows">${DOW.map((d) => `<span class="cal-dow">${d}</span>`).join('')}</div>
+     <div class="cal-grid">${cells}</div>
+     <div class="cal-legend"><span class="lg-dot has"></span> logged &nbsp;·&nbsp; <span class="lg-ring"></span> today</div>`;
+
+  container.onclick = (e) => {
+    const day = e.target.closest('[data-date]');
+    if (day) { handlers.onPick(day.dataset.date); return; }
+    const nav = e.target.closest('[data-cal]');
+    if (!nav) return;
+    if (nav.dataset.cal === 'prev') handlers.onPrev();
+    else if (nav.dataset.cal === 'next') handlers.onNext();
+    else if (nav.dataset.cal === 'today') handlers.onToday();
+  };
 }
 
 // ---- Summary -----------------------------------------------------------------

@@ -81,3 +81,21 @@
   .app-main { padding-top: calc(48px + var(--s4)); padding-bottom: var(--s7); }
   .chart-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Wider desktop: use the horizontal space (esp. Summary) so there's less scrolling.
+   The editor & settings stay a comfortable reading width; Summary spans full width. */
+@media (min-width: 1024px) {
+  :root { --maxw: 1160px; }
+  .chart-grid { grid-template-columns: repeat(3, 1fr); }
+  /* Editor & settings stay a comfortable reading width; Summary spans full width. */
+  #panel-log, #panel-settings { max-width: 860px; margin-inline: auto; }
+}
+
+/* Mobile header: avoid crowding the brand with the badge + sync chip. */
+@media (max-width: 480px) {
+  .app-header { padding: 0 var(--s3); }
+  .sync-status #syncText { display: none; }
+  .sync-status, .daypart-badge { padding: 4px 8px; }
+  .brand-name { font-size: 15px; }
+  .header-right { gap: 6px; }
+}

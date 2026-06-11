@@ -36,8 +36,13 @@
     <!-- ================= SUMMARY (main page) ================= -->
     <section class="tab-panel" id="panel-summary" data-tab="summary">
       <div class="exp-banner" id="expBanner" hidden></div>
+      <div class="summary-head">
+        <h2 class="panel-title">Overview</h2>
+        <button type="button" class="info-btn" id="commentsToggle" aria-expanded="false"
+                title="What the diary suggests">?</button>
+      </div>
+      <div class="card comments" id="summaryComments" hidden></div>
       <div class="cards" id="summaryCards"></div>
-      <div class="card comments" id="summaryComments"></div>
       <div class="chart-grid">
         <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
         <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
@@ -51,14 +56,16 @@
     <section class="tab-panel" id="panel-log" data-tab="log" hidden>
       <div class="card log-controls">
         <div class="mode-banner" id="modeBanner"></div>
-        <div class="log-nav">
-          <button type="button" class="btn ghost icon" id="btn-prev-day" title="Previous day">‹</button>
-          <input type="date" id="f-date" required aria-label="Entry date (morning you woke up)" />
-          <button type="button" class="btn ghost icon" id="btn-next-day" title="Next day">›</button>
-          <button type="button" class="btn ghost small" id="btn-today">Today</button>
-          <button type="button" class="btn primary small" id="btn-new">✚ New</button>
-        </div>
+        <div class="calendar" id="calendar"></div>
+        <input type="date" id="f-date" hidden />
         <p class="date-notice" id="dateNotice"></p>
+      </div>
+
+      <div class="card recent">
+        <div class="recent-head">
+          <h3 class="form-section" id="recentTitle">Entries this month</h3>
+        </div>
+        <div class="entry-list" id="entryList"></div>
       </div>
 
       <form id="logForm" class="card form" autocomplete="off">
@@ -78,8 +85,8 @@
 
         <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
         <div class="form-row two">
-          <label class="field"><span>Bedtime</span><input type="time" id="f-bedtime" /></label>
-          <label class="field"><span>Last attempt to sleep</span><input type="time" id="f-onset" /></label>
+          <label class="field"><span>Bedtime <small class="field-day" id="bedtimeDay"></small></span><input type="time" id="f-bedtime" /></label>
+          <label class="field"><span>Last attempt to sleep <small class="field-day" id="onsetDay"></small></span><input type="time" id="f-onset" /></label>
         </div>
         <div class="form-row two">
           <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
@@ -136,14 +143,6 @@
           <button type="submit" class="btn primary" id="btn-save">Save entry</button>
         </div>
       </form>
-
-      <div class="card recent">
-        <div class="recent-head">
-          <h3 class="form-section">Recent entries</h3>
-          <input type="month" id="historyMonth" aria-label="Month to browse" />
-        </div>
-        <div class="entry-list" id="entryList"></div>
-      </div>
     </section>
 
     <!-- ================= SETTINGS ================= -->
