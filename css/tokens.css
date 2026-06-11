@@ -44,23 +44,27 @@
 }
 
 /* ---- Time-of-day themes (set via data-daypart on <html>) ---------------------
-   Each daypart shifts the accent hue + a subtle background tint while keeping the
-   dark, tech feel. Night = the default palette above. */
+   Each daypart uses a clearly distinct accent hue + background tint so the shift
+   is obvious at a glance, while staying dark and legible. */
 :root[data-daypart="morning"] {
-  --bg: #0a0c10; --surface: #11151d; --surface-2: #161c26; --surface-3: #1e2633;
-  --accent: #7fe3c0; --accent-2: #f6c177; --accent-ink: #06231d;   /* mint + sunrise gold */
+  --bg: #0e0b07; --surface: #17120a; --surface-2: #1f1810; --surface-3: #2a2013;
+  --border: rgba(255,220,150,0.10); --border-strong: rgba(255,220,150,0.18);
+  --accent: #fbbf24; --accent-2: #fb923c; --accent-ink: #2a1c00;   /* amber + orange (sunrise) */
 }
 :root[data-daypart="day"] {
-  --bg: #0a0e14; --surface: #111722; --surface-2: #16202e; --surface-3: #1f2c3e;
-  --accent: #38bdf8; --accent-2: #5eead4; --accent-ink: #04222e;   /* bright sky cyan */
+  --bg: #0a0f18; --surface: #122033; --surface-2: #182a43; --surface-3: #213a59;
+  --border: rgba(140,200,255,0.12); --border-strong: rgba(140,200,255,0.22);
+  --accent: #38bdf8; --accent-2: #22d3ee; --accent-ink: #04222e;   /* bright sky + cyan (daylight) */
 }
 :root[data-daypart="evening"] {
-  --bg: #0b0810; --surface: #14101d; --surface-2: #1b1626; --surface-3: #241d33;
-  --accent: #c4b5fd; --accent-2: #fb923c; --accent-ink: #1e1633;   /* dusk violet + amber */
+  --bg: #0d0916; --surface: #160f24; --surface-2: #1e1531; --surface-3: #2a1f44;
+  --border: rgba(200,160,255,0.12); --border-strong: rgba(200,160,255,0.22);
+  --accent: #a78bfa; --accent-2: #f472b6; --accent-ink: #1a1033;   /* violet + pink (dusk) */
 }
 :root[data-daypart="night"] {
-  --bg: #070a11; --surface: #0d121d; --surface-2: #131a28; --surface-3: #1a2435;
-  --accent: #5eead4; --accent-2: #818cf8; --accent-ink: #062b27;   /* cool cyan + indigo */
+  --bg: #05070d; --surface: #0b0f1a; --surface-2: #111726; --surface-3: #182034;
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
+  --accent: #2dd4bf; --accent-2: #6366f1; --accent-ink: #04231f;   /* teal + indigo (deep night) */
 }
 
 /* Smoothly cross-fade when the daypart flips while the app is open. */

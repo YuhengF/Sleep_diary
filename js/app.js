@@ -273,6 +273,11 @@ function init() {
   });
 }
 
+// Network-first service worker keeps the app fresh after deploys + enables offline use.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {

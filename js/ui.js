@@ -360,14 +360,19 @@ export function setSyncStatus(state, text) {
 }
 
 // Tint the whole UI by time of day. Sets data-daypart on <html> (CSS does the rest).
-const DAYPART_THEME_COLOR = {
-  morning: '#0a0c10', day: '#0a0e14', evening: '#0b0810', night: '#070a11',
+const DAYPART_META = {
+  morning: { color: '#0e0b07', icon: '🌅' },
+  day:     { color: '#0a0f18', icon: '☀️' },
+  evening: { color: '#0d0916', icon: '🌆' },
+  night:   { color: '#05070d', icon: '🌙' },
 };
 export function setDaypartTheme(now = new Date()) {
   const h = now.getHours();
   const part = h < 6 ? 'night' : h < 11 ? 'morning' : h < 17 ? 'day' : h < 22 ? 'evening' : 'night';
   document.documentElement.dataset.daypart = part;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', DAYPART_THEME_COLOR[part]);
+  if (meta) meta.setAttribute('content', DAYPART_META[part].color);
+  const badge = $('#daypartBadge');
+  if (badge) badge.textContent = `${DAYPART_META[part].icon} ${part}`;
   return part;
 }
