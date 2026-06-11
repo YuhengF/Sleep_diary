@@ -264,8 +264,17 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
   .log-top .checkins { flex: 1 1 auto; }
 }
 
-/* Native time/date inputs can over-size on mobile; let them shrink to the column. */
-input[type="time"], input[type="date"] { min-width: 0; box-sizing: border-box; }
+/* Native time/date inputs ignore width:100% on iOS (fixed intrinsic width) and
+   over-size; resetting the appearance makes them fill the field like other inputs. */
+input[type="time"], input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+/* Keep the compact check-in time input sized to its content. */
+.checkin-row input[type="time"] { width: auto; }
 
 .nap-card { display: flex; flex-direction: column; gap: var(--s2); }
 .nap-card .form-section { margin: 0; }
