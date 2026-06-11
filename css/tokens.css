@@ -1,0 +1,44 @@
+/* tokens.css — design tokens (dark, tech-stylish). */
+:root {
+  /* Layered near-black surfaces */
+  --bg: #070a11;
+  --surface: #0d121d;
+  --surface-2: #131a28;
+  --surface-3: #1a2435;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text: #e7ecf3;
+  --text-dim: #9aa6b8;
+  --text-faint: #67748a;
+
+  /* Accent (tech cyan / indigo) */
+  --accent: #5eead4;
+  --accent-2: #818cf8;
+  --accent-ink: #062b27;
+
+  /* Semantic */
+  --good: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+
+  /* Spacing scale (4px base) */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+
+  /* Radii */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+
+  /* Shadows */
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  /* Typography */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Layout */
+  --maxw: 760px;
+  --header-h: 56px;
+  --tabbar-h: 60px;
+}

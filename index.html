@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e16" />
+  <title>Sleep Diary</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <!-- Chart.js (pinned). Loaded before the module so the UMD global is ready.
+       To harden, add an integrity="sha384-…" SRI hash for this exact version. -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">◐</span>
+      <span class="brand-name">Sleep Diary</span>
+    </div>
+    <div class="sync-status" id="syncStatus" title="Sync status">
+      <span class="dot" id="syncDot"></span>
+      <span id="syncText">local</span>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ================= LOG ================= -->
+    <section class="tab-panel" id="panel-log" data-tab="log">
+      <form id="logForm" class="card form" autocomplete="off">
+        <div class="form-row">
+          <label class="field">
+            <span>Date</span>
+            <input type="date" id="f-date" required />
+          </label>
+        </div>
+
+        <h3 class="form-section">Wake</h3>
+        <div class="form-row three">
+          <label class="field"><span>Alarm</span><input type="time" id="f-alarm" /></label>
+          <label class="field"><span>Wake time</span><input type="time" id="f-wake" /></label>
+          <label class="field"><span>Out of bed</span><input type="time" id="f-outofbed" /></label>
+        </div>
+
+        <div class="rating" data-key="quality"></div>
+        <div class="rating" data-key="wakeDifficulty"></div>
+        <div class="rating" data-key="grogginess1h"></div>
+
+        <h3 class="form-section">Night</h3>
+        <div class="form-row two">
+          <label class="field"><span>Bedtime</span><input type="time" id="f-bedtime" /></label>
+          <label class="field"><span>Last attempt to sleep</span><input type="time" id="f-onset" /></label>
+        </div>
+        <div class="form-row two">
+          <label class="field tst-field">
+            <span>Total sleep <small id="tstHint">(auto)</small></span>
+            <input type="text" id="f-tst" inputmode="numeric" placeholder="auto" readonly />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="f-tst-override" />
+            <span>Enter manually</span>
+          </label>
+        </div>
+
+        <h3 class="form-section">Melatonin</h3>
+        <div class="form-row two">
+          <div class="field">
+            <span>Dose (mg)</span>
+            <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
+          </div>
+          <label class="field"><span>Time taken</span><input type="time" id="f-melatonin-time" /></label>
+        </div>
+
+        <h3 class="form-section">Daytime factors</h3>
+        <div class="form-row two">
+          <label class="field"><span>Sunlight time</span><input type="time" id="f-sunlight-time" /></label>
+          <label class="field"><span>Sunlight (min)</span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
+        </div>
+        <div class="form-row two">
+          <label class="field"><span>Exercise start</span><input type="time" id="f-exercise-start" /></label>
+          <label class="field"><span>Exercise (min)</span><input type="number" id="f-exercise-dur" min="0" step="5" inputmode="numeric" /></label>
+        </div>
+        <div class="form-row two">
+          <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
+          <div class="field">
+            <span>Dinner amount</span>
+            <div class="segmented" id="seg-dinner" data-name="dinner"></div>
+          </div>
+        </div>
+        <div class="form-row two">
+          <div class="field">
+            <span>Before-bed snack</span>
+            <div class="segmented" id="seg-snack" data-name="snack"></div>
+          </div>
+          <label class="field"><span>Caffeine time</span><input type="time" id="f-caffeine-time" /></label>
+        </div>
+
+        <h3 class="form-section">Environment</h3>
+        <div class="form-row two">
+          <label class="field"><span>Bedroom temp (°C)</span><input type="number" id="f-temp" step="0.1" inputmode="decimal" placeholder="auto" /></label>
+          <div class="field">
+            <span>&nbsp;</span>
+            <button type="button" class="btn ghost" id="btn-temp">⟳ Auto temperature</button>
+          </div>
+        </div>
+        <p class="hint" id="tempHint"></p>
+
+        <label class="field"><span>Notes</span><textarea id="f-notes" rows="2" placeholder="Anything else worth noting"></textarea></label>
+
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="btn-clear">New / Clear</button>
+          <button type="submit" class="btn primary" id="btn-save">Save entry</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ================= SUMMARY ================= -->
+    <section class="tab-panel" id="panel-summary" data-tab="summary" hidden>
+      <div class="exp-banner" id="expBanner" hidden></div>
+      <div class="cards" id="summaryCards"></div>
+      <div class="card comments" id="summaryComments"></div>
+      <div class="chart-grid">
+        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
+        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
+        <div class="card chart-card"><h4>Quality &amp; grogginess</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
+        <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
+        <div class="card chart-card"><h4>Daytime sleepiness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- ================= HISTORY ================= -->
+    <section class="tab-panel" id="panel-history" data-tab="history" hidden>
+      <div class="history-head">
+        <label class="field inline"><span>Month</span><input type="month" id="historyMonth" /></label>
+      </div>
+      <div class="entry-list" id="entryList"></div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="tab-panel" id="panel-settings" data-tab="settings" hidden>
+      <div class="card form">
+        <h3 class="form-section">Sync (private data repo)</h3>
+        <p class="hint">Your entries sync to a private GitHub repo. Paste a fine-grained Personal Access Token scoped to that repo (Contents: read &amp; write). It is stored only in this browser.</p>
+        <label class="field"><span>GitHub token</span><input type="password" id="f-token" placeholder="github_pat_…" /></label>
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="btn-test">Test connection</button>
+          <button type="button" class="btn primary" id="btn-save-token">Save token</button>
+        </div>
+        <p class="hint" id="tokenHint"></p>
+
+        <h3 class="form-section">Defaults</h3>
+        <div class="form-row two">
+          <label class="field"><span>Default alarm</span><input type="time" id="f-default-alarm" /></label>
+          <label class="field"><span>Target sleep (h)</span>
+            <span class="range-pair">
+              <input type="number" id="f-target-min" step="0.5" min="4" max="12" /> –
+              <input type="number" id="f-target-max" step="0.5" min="4" max="12" />
+            </span>
+          </label>
+        </div>
+
+        <h3 class="form-section">Temperature source</h3>
+        <div class="form-row two">
+          <label class="field"><span>Mode</span>
+            <select id="f-loc-mode"><option value="geo">Use my location (auto)</option><option value="manual">Manual</option></select>
+          </label>
+          <label class="field"><span>Manual temp (°C)</span><input type="number" id="f-manual-temp" step="0.1" inputmode="decimal" /></label>
+        </div>
+
+        <h3 class="form-section">Experiment (track one factor)</h3>
+        <label class="field checkbox"><input type="checkbox" id="f-exp-active" /><span>Experiment active</span></label>
+        <div class="form-row three">
+          <label class="field"><span>Factor</span><select id="f-exp-factor"></select></label>
+          <label class="field"><span>Outcome</span><select id="f-exp-outcome"></select></label>
+          <label class="field"><span>Days</span><input type="number" id="f-exp-days" min="3" max="60" /></label>
+        </div>
+        <label class="field"><span>Start date</span><input type="date" id="f-exp-start" /></label>
+
+        <div class="form-actions">
+          <button type="button" class="btn primary" id="btn-save-settings">Save settings</button>
+        </div>
+        <p class="hint" id="settingsHint"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating quick-sleepiness button -->
+  <button class="fab" id="fab-sleepiness" title="Log sleepiness now">+ sleepiness</button>
+
+  <!-- Bottom / top tab bar -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-go="log">Log</button>
+    <button class="tab-btn" data-go="summary">Summary</button>
+    <button class="tab-btn" data-go="history">History</button>
+    <button class="tab-btn" data-go="settings">Settings</button>
+  </nav>
+
+  <!-- Sleepiness modal -->
+  <div class="modal-backdrop" id="sleepModal" hidden>
+    <div class="modal card">
+      <h3>Log sleepiness</h3>
+      <div class="rating" data-key="sleepiness" id="sleepRating"></div>
+      <label class="field"><span>Note (optional)</span><input type="text" id="sleep-note" placeholder="e.g. post-lunch dip" /></label>
+      <div class="form-actions">
+        <button type="button" class="btn ghost" id="sleep-cancel">Cancel</button>
+        <button type="button" class="btn primary" id="sleep-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-host" id="toastHost"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
