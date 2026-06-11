@@ -46,6 +46,17 @@ input[readonly] { opacity: 0.7; }
 
 .hint { font-size: 12px; color: var(--text-faint); }
 
+/* Diary-date notice: which night / morning this record covers. */
+.date-notice {
+  font-size: 13px; line-height: 1.5; color: var(--text-dim);
+  background: color-mix(in srgb, var(--accent-2) 12%, var(--surface-2));
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent);
+  border-radius: var(--r-md); padding: 10px 12px;
+}
+.date-notice strong { color: var(--text); }
+.date-notice small { color: var(--text-faint); }
+.date-notice .dn-icon { font-size: 14px; }
+
 .form-actions { display: flex; gap: var(--s3); justify-content: flex-end; margin-top: var(--s3); }
 
 /* ---- Buttons ---- */

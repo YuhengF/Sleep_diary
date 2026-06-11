@@ -8,10 +8,13 @@ several days.
 ## Features
 - **Fast logging** of wake/alarm/out-of-bed times, bedtime and last attempt to sleep,
   melatonin dose & timing, morning sunlight, exercise, dinner (time + amount), before-bed
-  snack, caffeine, bedroom temperature, notes, and three 0–5 ratings: sleep quality,
+  snack, caffeine, bedroom temperature, notes, and three 1–10 ratings: sleep quality,
   wake difficulty, and morning grogginess (~1h after waking).
-- **Quick sleepiness log** — a floating button to record how sleepy you feel (0–5) at any
+- **Quick sleepiness log** — a floating button to record how sleepy you feel (1–10) at any
   time of day.
+- **Time-of-day theme** — the UI subtly re-tints for morning, day, evening, and night.
+- **Clear diary-date notice** — every entry shows which night → morning it covers, since
+  you usually log after waking (already the next calendar day).
 - **Auto bedroom temperature** via the free [Open-Meteo](https://open-meteo.com) API
   (no API key) using your location, with manual override.
 - **Doctor-style stats**: sleep efficiency, sleep onset latency, total sleep time vs a

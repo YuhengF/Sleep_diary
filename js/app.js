@@ -231,6 +231,9 @@ function wire() {
     document.getElementById(id).addEventListener('input', recompute));
   document.getElementById('f-tst-override').addEventListener('change', ui.updateTstHint);
 
+  // Diary-date notice updates when the date changes.
+  document.getElementById('f-date').addEventListener('change', ui.updateDateNotice);
+
   // Sleepiness modal.
   document.getElementById('fab-sleepiness').addEventListener('click', ui.openSleepModal);
   document.getElementById('sleep-cancel').addEventListener('click', ui.closeSleepModal);
@@ -257,11 +260,17 @@ function wire() {
 }
 
 function init() {
+  ui.setDaypartTheme();
   wire();
   renderSummaryView();
   renderHistoryView();
   updateStatusIdle();
   backgroundSync(); // pull + flush if a token exists
+  // Keep the theme in step with the clock (e.g. crossing into evening while open).
+  setInterval(() => ui.setDaypartTheme(), 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') ui.setDaypartTheme();
+  });
 }
 
 if (document.readyState === 'loading') {

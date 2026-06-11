@@ -1,10 +1,10 @@
 // ui.js — DOM building, form read/fill, rendering. Talks to no network directly.
 import {
-  MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_MIN, RATING_MAX,
+  MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_MIN, RATING_MAX, RATING_DEFAULT,
   EXPERIMENT_FACTORS, EXPERIMENT_OUTCOMES,
 } from './config.js';
 import { computeNight } from './stats.js';
-import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid } from './util.js';
+import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice } from './util.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -19,9 +19,9 @@ export function buildRatings() {
     el.innerHTML = `
       <div class="rating-head">
         <span class="rating-label">${meta.label}</span>
-        <span class="rating-value" data-out>0</span>
+        <span class="rating-value" data-out>${RATING_DEFAULT}</span>
       </div>
-      <input type="range" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="0" data-range />
+      <input type="range" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${RATING_DEFAULT}" data-range />
       <div class="rating-ends"><small>${meta.low}</small><small>${meta.high}</small></div>`;
     const range = $('[data-range]', el);
     const out = $('[data-out]', el);
@@ -75,7 +75,7 @@ function setRating(key, val) {
   const el = $(`.rating[data-key="${key}"]`);
   if (!el) return;
   const range = $('[data-range]', el);
-  range.value = val == null ? 0 : val;
+  range.value = val == null ? RATING_DEFAULT : val;
   $('[data-out]', el).textContent = range.value;
 }
 
@@ -95,12 +95,13 @@ export function fillForm(entry, settings) {
   const d = settings.defaults || {};
   const e = entry || {};
   $('#f-date').value = e.date || todayISO();
+  updateDateNotice();
   $('#f-alarm').value = e.alarmTime || d.alarmTime || '08:00';
   $('#f-wake').value = e.wakeTime || ($('#f-alarm').value);
   $('#f-outofbed').value = e.outOfBedTime || '';
-  setRating('quality', e.quality ?? 0);
-  setRating('wakeDifficulty', e.wakeDifficulty ?? 0);
-  setRating('grogginess1h', e.grogginess1h ?? 0);
+  setRating('quality', e.quality ?? RATING_DEFAULT);
+  setRating('wakeDifficulty', e.wakeDifficulty ?? RATING_DEFAULT);
+  setRating('grogginess1h', e.grogginess1h ?? RATING_DEFAULT);
   $('#f-bedtime').value = e.bedtime || '';
   $('#f-onset').value = e.sleepOnset || '';
 
@@ -171,6 +172,20 @@ export function updateTstHint() {
   $('#tstHint').textContent = dur != null ? `(auto · ${fmtDuration(dur)})` : '(auto)';
 }
 
+// Clarify which night/morning this entry covers (we log after waking = next day).
+export function updateDateNotice() {
+  const el = $('#dateNotice');
+  if (!el) return;
+  const date = $('#f-date').value;
+  if (!date) { el.textContent = ''; return; }
+  const prev = addDays(date, -1);
+  el.innerHTML =
+    `<span class="dn-icon">🌙</span> This record covers the night of <strong>${formatNice(prev)}</strong> ` +
+    `→ <span class="dn-icon">☀️</span> morning of <strong>${formatNice(date)}</strong>.<br>` +
+    `<small>Bedtime &amp; last-attempt-to-sleep are from <strong>${formatNice(prev)}</strong> evening; ` +
+    `wake, grogginess &amp; quality are from <strong>${formatNice(date)}</strong> morning.</small>`;
+}
+
 // ---- Summary -----------------------------------------------------------------
 
 function card(label, value, sub, tone = '') {
@@ -195,8 +210,8 @@ export function renderSummary(summary) {
       summary.pctInBand != null ? `${summary.pctInBand}% nights in target` : '', effTone(summary.avgEfficiency)),
     card('Avg total sleep', h(summary.avgTst), `target ${(summary.targetMin/60).toFixed(1)}–${(summary.targetMax/60).toFixed(1)}h`),
     card('Avg time to fall asleep', h(summary.avgSol), summary.avgSol != null && summary.avgSol > 30 ? 'elevated' : ''),
-    card('Avg quality', summary.avgQuality != null ? `${summary.avgQuality}/5` : '—', ''),
-    card('Avg grogginess', summary.avgGrogginess != null ? `${summary.avgGrogginess}/5` : '—', ''),
+    card('Avg quality', summary.avgQuality != null ? `${summary.avgQuality}/10` : '—', ''),
+    card('Avg grogginess', summary.avgGrogginess != null ? `${summary.avgGrogginess}/10` : '—', ''),
     card('Wake-time regularity', summary.wakeRegularity != null ? `±${summary.wakeRegularity}m` : '—',
       summary.wakeRegularity != null && summary.wakeRegularity > 60 ? 'variable' : 'steady'),
     card('Bedtime regularity', summary.bedtimeRegularity != null ? `±${summary.bedtimeRegularity}m` : '—',
@@ -243,7 +258,7 @@ export function renderEntryList(entries, settings, onEdit) {
       <div class="entry-meta">
         <span>TST ${m.tstMin != null ? fmtDuration(m.tstMin) : '—'}</span>
         <span>Eff ${m.efficiencyPct != null ? m.efficiencyPct + '%' : '—'}</span>
-        <span>Q ${e.quality ?? '—'}/5</span>
+        <span>Q ${e.quality ?? '—'}/10</span>
       </div>`;
     row.addEventListener('click', () => onEdit(e.date));
     host.appendChild(row);
@@ -342,4 +357,17 @@ export function setSyncStatus(state, text) {
   const dot = $('#syncDot');
   $('#syncText').textContent = text;
   dot.className = `dot ${state}`; // synced | syncing | offline | local | error
+}
+
+// Tint the whole UI by time of day. Sets data-daypart on <html> (CSS does the rest).
+const DAYPART_THEME_COLOR = {
+  morning: '#0a0c10', day: '#0a0e14', evening: '#0b0810', night: '#070a11',
+};
+export function setDaypartTheme(now = new Date()) {
+  const h = now.getHours();
+  const part = h < 6 ? 'night' : h < 11 ? 'morning' : h < 17 ? 'day' : h < 22 ? 'evening' : 'night';
+  document.documentElement.dataset.daypart = part;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', DAYPART_THEME_COLOR[part]);
+  return part;
 }

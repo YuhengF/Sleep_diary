@@ -150,7 +150,7 @@ export function renderTstTrend(canvas, entries, settings) {
   }));
 }
 
-// Quality / grogginess trend (0–5 axis).
+// Quality / grogginess trend (1–10 axis).
 export function renderQualityTrend(canvas, entries) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
@@ -168,7 +168,7 @@ export function renderQualityTrend(canvas, entries) {
     options: baseOptions({
       scales: {
         x: { ticks: { color: AXIS }, grid: { color: GRID } },
-        y: { min: 0, max: 5, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
+        y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
       },
     }),
   }));
@@ -219,7 +219,7 @@ export function renderSleepinessByHour(canvas, logs) {
       },
       scales: {
         x: { min: 0, max: 24, ticks: { color: AXIS, stepSize: 3, callback: (v) => `${v}:00` }, grid: { color: GRID }, title: { display: true, text: 'hour of day', color: AXIS } },
-        y: { min: 0, max: 5, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
+        y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
       },
     }),
   }));

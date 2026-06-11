@@ -61,8 +61,25 @@ export function monthKeyOf(dateStr) {
 
 // Today's local date as "YYYY-MM-DD".
 export function todayISO() {
-  const d = new Date();
+  return isoOf(new Date());
+}
+
+function isoOf(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Shift an ISO date by n days (local, DST-safe).
+export function addDays(iso, n) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return isoOf(d);
+}
+
+// "2026-06-12" -> "Fri Jun 12" (locale-aware).
+export function formatNice(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 export function mean(nums) {

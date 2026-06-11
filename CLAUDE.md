@@ -16,7 +16,10 @@ hosted on GitHub Pages. It is a generic sleep-tracking tool.
 - Data model + sync: monthly files `entries/YYYY-MM.json` in the data repo, plus
   `settings.json`. Multi-device convergence via per-date last-writer-wins merge.
 - localStorage is an offline cache + offline write queue (`sd.dirty`).
-- All rating scales are 0–5.
+- All rating scales are 1–10.
+- Entries are keyed by the **wake-up morning date** (you log after waking). The Log form
+  shows a notice clarifying which night → morning each record covers.
+- The UI theme re-tints by time of day via `data-daypart` on `<html>` (see tokens.css).
 
 ## Conventions
 - Do NOT add Claude / AI as a git contributor, committer, author, or co-author.

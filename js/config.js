@@ -20,7 +20,7 @@ export const MELATONIN_DOSES = [0, 0.2, 0.4, 0.6, 1, 2, 5];
 export const MEAL_AMOUNTS = ['small', 'medium', 'big'];
 export const SNACK_AMOUNTS = ['none', 'small', 'medium', 'big'];
 
-// 0–5 rating metadata: label per endpoint so sliders read intuitively.
+// 1–10 rating metadata: label per endpoint so sliders read intuitively.
 export const SCALES = {
   quality: { label: 'Sleep quality', low: 'terrible', high: 'excellent' },
   wakeDifficulty: { label: 'Wake difficulty', low: 'effortless', high: 'very hard' },
@@ -28,8 +28,9 @@ export const SCALES = {
   sleepiness: { label: 'Sleepiness', low: 'fully alert', high: 'nodding off' },
 };
 
-export const RATING_MIN = 0;
-export const RATING_MAX = 5;
+export const RATING_MIN = 1;
+export const RATING_MAX = 10;
+export const RATING_DEFAULT = 5; // neutral midpoint for new entries
 
 // Defaults applied to new entries / fresh settings.
 export const DEFAULT_SETTINGS = {

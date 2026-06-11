@@ -42,3 +42,31 @@
   --header-h: 56px;
   --tabbar-h: 60px;
 }
+
+/* ---- Time-of-day themes (set via data-daypart on <html>) ---------------------
+   Each daypart shifts the accent hue + a subtle background tint while keeping the
+   dark, tech feel. Night = the default palette above. */
+:root[data-daypart="morning"] {
+  --bg: #0a0c10; --surface: #11151d; --surface-2: #161c26; --surface-3: #1e2633;
+  --accent: #7fe3c0; --accent-2: #f6c177; --accent-ink: #06231d;   /* mint + sunrise gold */
+}
+:root[data-daypart="day"] {
+  --bg: #0a0e14; --surface: #111722; --surface-2: #16202e; --surface-3: #1f2c3e;
+  --accent: #38bdf8; --accent-2: #5eead4; --accent-ink: #04222e;   /* bright sky cyan */
+}
+:root[data-daypart="evening"] {
+  --bg: #0b0810; --surface: #14101d; --surface-2: #1b1626; --surface-3: #241d33;
+  --accent: #c4b5fd; --accent-2: #fb923c; --accent-ink: #1e1633;   /* dusk violet + amber */
+}
+:root[data-daypart="night"] {
+  --bg: #070a11; --surface: #0d121d; --surface-2: #131a28; --surface-3: #1a2435;
+  --accent: #5eead4; --accent-2: #818cf8; --accent-ink: #062b27;   /* cool cyan + indigo */
+}
+
+/* Smoothly cross-fade when the daypart flips while the app is open. */
+body, .card, .app-header, .tab-bar, .chip, .btn {
+  transition: background-color .6s ease, border-color .6s ease, color .6s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body, .card, .app-header, .tab-bar, .chip, .btn { transition: none; }
+}
