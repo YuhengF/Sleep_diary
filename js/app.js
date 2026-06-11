@@ -82,7 +82,8 @@ function renderCheckins() {
   // Check-ins are stored in UTC; bucket them by their zoned date so they land on
   // the day the user actually logged them, not the UTC date.
   const dayLogs = store.listSleepiness(store.cachedMonthKeys())
-    .filter((c) => zonedDateStr(c.datetime, tz) === date);
+    .filter((c) => zonedDateStr(c.datetime, tz) === date)
+    .sort((a, b) => (a.datetime < b.datetime ? 1 : -1)); // newest first
 
   ui.renderCheckins(date, dayLogs, tz, {
     onEdit: (id, patch) => {
@@ -360,7 +361,7 @@ function wire() {
 
   // Live TST recompute + bedtime/onset day hints.
   const recompute = debounce(ui.updateTstHint, 100);
-  ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm', 'f-waso'].forEach((id) => on(id, 'input', recompute));
+  ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm', 'f-waso', 'f-outofbed'].forEach((id) => on(id, 'input', recompute));
   ['f-bedtime', 'f-onset'].forEach((id) => on(id, 'input', ui.updateNightTimes));
   on('f-tst-override', 'change', ui.updateTstHint);
 

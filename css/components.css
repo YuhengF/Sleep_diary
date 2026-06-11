@@ -270,5 +270,5 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
   .card { padding: var(--s3); }
 }
 
-/* Check-ins stay compact: ~3 rows visible, scroll beyond. */
-.checkin-list { max-height: 162px; overflow-y: auto; }
+/* Check-ins stay compact: ~4 rows visible (newest first), scroll beyond. */
+.checkin-list { max-height: 216px; overflow-y: auto; }

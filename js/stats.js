@@ -10,23 +10,24 @@ import {
 //   Sleep onset latency (SOL) = bedtime → last attempt to sleep.
 //   WASO = minutes awake after first falling asleep (night awakenings).
 //   Total sleep time (TST) = time actually asleep
-//        = (onset → wake) − WASO, or the manually entered value.
-//   Sleep efficiency = TST / TIB. Lying in bed awake (long SOL, WASO, or a slow
-//        get-up) lowers it — exactly what a clinician looks for.
+//        = (sleepOnset → FINAL wake-up) − WASO, or the manually entered value.
+//        Final wake-up = out-of-bed when given, so sleeping in after a first wake
+//        is counted; any awake time in that window belongs in WASO.
+//   Sleep efficiency = TST / TIB. Lying in bed awake (long SOL or WASO) lowers it.
 //   Naps are daytime sleep: kept OUT of nighttime efficiency, but added to a
 //        separate 24h total so you can see total sleep and nap's effect on drive.
 export function computeNight(entry, settings) {
   const wake = entry.wakeTime || entry.alarmTime;
-  const outOfBed = entry.outOfBedTime || wake;
-  const timeInBedMin = durationMinutes(entry.bedtime, outOfBed);
+  const finalWake = entry.outOfBedTime || wake; // final actual wake-up (captures sleep-in)
+  const timeInBedMin = durationMinutes(entry.bedtime, finalWake);
   const solMin = solMinutes(entry.bedtime, entry.sleepOnset);
   const waso = entry.waso || 0;
   const napMin = entry.napMinutes || 0;
 
-  // TST: entered value wins; else asleep window (onset->wake) minus WASO.
+  // TST: entered value wins; else asleep window (onset → final wake-up) minus WASO.
   let tstMin = entry.tstMinutes;
   if (tstMin == null) {
-    const asleepWindow = durationMinutes(entry.sleepOnset || entry.bedtime, wake);
+    const asleepWindow = durationMinutes(entry.sleepOnset || entry.bedtime, finalWake);
     tstMin = asleepWindow == null ? null : Math.max(0, asleepWindow - waso);
   }
 

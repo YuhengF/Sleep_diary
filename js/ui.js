@@ -189,9 +189,12 @@ export function updateTstHint() {
   const manual = $('#f-tst-override').checked;
   $('#f-tst').readOnly = !manual;
   if (manual) { $('#tstHint').textContent = '(manual, minutes)'; return; }
-  const wake = $('#f-wake').value || $('#f-alarm').value;
+  // End at the final wake-up (out-of-bed if given) so sleeping in is counted; subtract WASO.
+  const finalWake = $('#f-outofbed').value || $('#f-wake').value || $('#f-alarm').value;
   const start = $('#f-onset').value || $('#f-bedtime').value;
-  const dur = durationMinutes(start, wake);
+  const waso = Number($('#f-waso').value) || 0;
+  let dur = durationMinutes(start, finalWake);
+  if (dur != null) dur = Math.max(0, dur - waso);
   $('#f-tst').value = dur != null ? dur : '';
   $('#tstHint').textContent = dur != null ? `(auto · ${fmtDuration(dur)})` : '(auto)';
 }

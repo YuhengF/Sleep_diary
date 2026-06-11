@@ -88,7 +88,7 @@ export function renderTimeline(canvas, entries, settings) {
   for (const e of entries) {
     const bed = norm(e.bedtime);
     const onset = norm(e.sleepOnset) ?? bed;
-    const wake = norm(e.wakeTime || e.alarmTime);
+    const wake = norm(e.outOfBedTime || e.wakeTime || e.alarmTime);
     if (bed == null || wake == null) { latency.push(null); asleep.push(null); continue; }
     const onsetAbs = onset < bed ? onset + 1440 : onset;
     const wakeAbs = wake < bed ? wake + 1440 : wake;
