@@ -87,10 +87,6 @@ function getRating(key, rootSel = '.rating') {
 
 // ---- Log form ----------------------------------------------------------------
 
-export function clearForm(settings) {
-  fillForm(null, settings);
-}
-
 export function fillForm(entry, settings) {
   const d = settings.defaults || {};
   const e = entry || {};
@@ -175,15 +171,36 @@ export function updateTstHint() {
 // Clarify which night/morning this entry covers (we log after waking = next day).
 export function updateDateNotice() {
   const el = $('#dateNotice');
-  if (!el) return;
   const date = $('#f-date').value;
-  if (!date) { el.textContent = ''; return; }
-  const prev = addDays(date, -1);
-  el.innerHTML =
-    `<span class="dn-icon">🌙</span> This record covers the night of <strong>${formatNice(prev)}</strong> ` +
-    `→ <span class="dn-icon">☀️</span> morning of <strong>${formatNice(date)}</strong>.<br>` +
-    `<small>Bedtime &amp; last-attempt-to-sleep are from <strong>${formatNice(prev)}</strong> evening; ` +
-    `wake, grogginess &amp; quality are from <strong>${formatNice(date)}</strong> morning.</small>`;
+  // Label the two dated form sections so it's obvious which calendar day each is.
+  const secM = $('#sec-morning'), secN = $('#sec-night');
+  if (date) {
+    const prev = addDays(date, -1);
+    if (secM) secM.innerHTML = `☀️ This morning · <span class="sec-date">${formatNice(date)}</span>`;
+    if (secN) secN.innerHTML = `🌙 Yesterday &amp; bedtime · <span class="sec-date">${formatNice(prev)}</span>`;
+    if (el) el.innerHTML =
+      `<span class="dn-icon">🌙</span> Covers the night of <strong>${formatNice(prev)}</strong> ` +
+      `→ <span class="dn-icon">☀️</span> morning of <strong>${formatNice(date)}</strong>.<br>` +
+      `<small>Dinner, snack, caffeine, exercise, melatonin &amp; bedtime are from ` +
+      `<strong>${formatNice(prev)}</strong> (yesterday); wake, sunlight, grogginess &amp; quality are ` +
+      `<strong>${formatNice(date)}</strong> (this morning).</small>`;
+  } else if (el) {
+    el.textContent = '';
+  }
+}
+
+// Show whether the user is editing a saved entry or creating a new one.
+export function setMode(mode, date) {
+  const banner = $('#modeBanner');
+  const saveBtn = $('#btn-save');
+  const editing = mode === 'edit';
+  if (banner) {
+    banner.className = `mode-banner ${editing ? 'editing' : 'new'}`;
+    banner.innerHTML = editing
+      ? `<span class="mode-icon">✏️</span> Editing saved entry · <strong>${formatNice(date)}</strong>`
+      : `<span class="mode-icon">✚</span> New entry · <strong>${formatNice(date)}</strong>`;
+  }
+  if (saveBtn) saveBtn.textContent = editing ? 'Update entry' : 'Save entry';
 }
 
 // ---- Summary -----------------------------------------------------------------

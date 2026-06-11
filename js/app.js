@@ -5,7 +5,7 @@ import * as ui from './ui.js';
 import * as charts from './charts.js';
 import { resolveBedroomTemp } from './weather.js';
 import { summarize, correlate, comments } from './stats.js';
-import { monthKeyOf, todayISO, debounce } from './util.js';
+import { monthKeyOf, todayISO, debounce, addDays } from './util.js';
 
 let settings = store.getSettings();
 
@@ -52,7 +52,8 @@ function renderSummaryView() {
   }
 }
 
-function renderHistoryView() {
+// Render the "Recent entries" list for the month chosen in the Log tab.
+function renderRecent() {
   const monthInput = document.getElementById('historyMonth');
   const mk = monthInput.value || monthKeyOf(todayISO());
   monthInput.value = mk;
@@ -62,12 +63,62 @@ function renderHistoryView() {
   ui.renderEntryList(entries, settings, editEntry);
 }
 
-function editEntry(date) {
+// ---- Date-driven Log editor --------------------------------------------------
+
+// Load a date into the form; Edit mode if it already has a saved entry, else New.
+function loadDate(date) {
   const e = store.getEntry(date);
-  if (!e) return;
-  ui.fillForm(e, settings);
+  ui.fillForm(e || { date }, settings);
+  ui.setMode(e ? 'edit' : 'new', date);
+  return !!e;
+}
+
+// Most recent logged date across cached months, or null.
+function newestEntryDate() {
+  const entries = allEntries();
+  return entries.length ? entries[entries.length - 1].date : null;
+}
+
+// On open: show the newest entry (or a new entry for today if none yet).
+function loadInitialLog() {
+  loadDate(newestEntryDate() || todayISO());
+}
+
+function onDateChange() {
+  const date = document.getElementById('f-date').value;
+  if (date) loadDate(date);
+}
+
+function shiftDay(delta) {
+  const cur = document.getElementById('f-date').value || todayISO();
+  document.getElementById('f-date').value = addDays(cur, delta);
+  onDateChange();
+}
+
+function goToday() {
+  document.getElementById('f-date').value = todayISO();
+  onDateChange();
+}
+
+// "✚ New" — start a fresh entry for today (loads it if today is already logged).
+function newEntry() {
+  const d = todayISO();
+  document.getElementById('f-date').value = d;
+  if (store.getEntry(d)) {
+    loadDate(d);
+    ui.toast('Today already has an entry — opened it for editing');
+  } else {
+    ui.fillForm({ date: d }, settings);
+    ui.setMode('new', d);
+  }
+}
+
+// Tap a recent entry → load it into the form above.
+function editEntry(date) {
+  document.getElementById('f-date').value = date;
+  loadDate(date);
   goTab('log');
-  ui.toast(`Editing ${date}`);
+  document.getElementById('panel-log').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function goTab(name) {
@@ -93,7 +144,7 @@ async function backgroundSync() {
     await sync.pullMonth(monthKeyOf(todayISO()));
     await sync.flushDirty();
     renderSummaryView();
-    renderHistoryView();
+    renderRecent();
     updateStatusIdle();
   } catch (err) {
     if (err instanceof sync.AuthError) {
@@ -131,8 +182,10 @@ function onSave(ev) {
   const entry = ui.readForm();
   if (!entry) { ui.toast('Pick a date first', 'error'); return; }
   store.upsertEntry(entry);
+  ui.setMode('edit', entry.date); // it's now a saved entry
+  document.getElementById('historyMonth').value = monthKeyOf(entry.date);
   renderSummaryView();
-  renderHistoryView();
+  renderRecent();
   ui.toast(`Saved ${entry.date}`, 'success');
   syncAfterWrite(monthKeyOf(entry.date));
 }
@@ -210,29 +263,41 @@ function onSaveSleepiness() {
 
 // ---- Wiring ------------------------------------------------------------------
 
+async function onMonthChange() {
+  renderRecent();
+  if (sync.hasToken() && sync.isOnline()) {
+    try { await sync.pullMonth(document.getElementById('historyMonth').value); renderRecent(); }
+    catch { /* offline / auth handled elsewhere */ }
+  }
+}
+
 function wire() {
   ui.buildRatings();
   ui.buildSegmented();
   ui.buildExperimentSelects();
   ui.setupTabs();
-  ui.clearForm(settings);
   ui.fillSettings(settings, sync.hasToken());
 
   document.getElementById('logForm').addEventListener('submit', onSave);
-  document.getElementById('btn-clear').addEventListener('click', () => ui.clearForm(settings));
+  // Reset discards unsaved edits: reload the saved entry, or blank if it's a new date.
+  document.getElementById('btn-clear').addEventListener('click', () => onDateChange());
   document.getElementById('btn-temp').addEventListener('click', onAutoTemp);
   document.getElementById('btn-save-token').addEventListener('click', onSaveToken);
   document.getElementById('btn-test').addEventListener('click', onTestConnection);
   document.getElementById('btn-save-settings').addEventListener('click', onSaveSettings);
+
+  // Date navigation.
+  document.getElementById('btn-prev-day').addEventListener('click', () => shiftDay(-1));
+  document.getElementById('btn-next-day').addEventListener('click', () => shiftDay(1));
+  document.getElementById('btn-today').addEventListener('click', goToday);
+  document.getElementById('btn-new').addEventListener('click', newEntry);
+  document.getElementById('f-date').addEventListener('change', onDateChange);
 
   // Live TST recompute.
   const recompute = debounce(ui.updateTstHint, 100);
   ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm'].forEach((id) =>
     document.getElementById(id).addEventListener('input', recompute));
   document.getElementById('f-tst-override').addEventListener('change', ui.updateTstHint);
-
-  // Diary-date notice updates when the date changes.
-  document.getElementById('f-date').addEventListener('change', ui.updateDateNotice);
 
   // Sleepiness modal.
   document.getElementById('fab-sleepiness').addEventListener('click', ui.openSleepModal);
@@ -242,14 +307,14 @@ function wire() {
     if (e.target.id === 'sleepModal') ui.closeSleepModal();
   });
 
-  // History month switch.
+  // Recent-entries month switch (Log tab).
   document.getElementById('historyMonth').value = monthKeyOf(todayISO());
-  document.getElementById('historyMonth').addEventListener('change', renderHistoryView);
+  document.getElementById('historyMonth').addEventListener('change', onMonthChange);
 
   // Re-render on tab switch (charts need a visible canvas to size correctly).
   window.addEventListener('tabchange', (e) => {
     if (e.detail === 'summary') renderSummaryView();
-    if (e.detail === 'history') renderHistoryView();
+    if (e.detail === 'log') renderRecent();
   });
 
   // Reconnect / focus → opportunistic sync.
@@ -263,7 +328,8 @@ function init() {
   ui.setDaypartTheme();
   wire();
   renderSummaryView();
-  renderHistoryView();
+  renderRecent();
+  loadInitialLog();
   updateStatusIdle();
   backgroundSync(); // pull + flush if a token exists
   // Keep the theme in step with the clock (e.g. crossing into evening while open).

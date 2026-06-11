@@ -12,9 +12,14 @@ several days.
   wake difficulty, and morning grogginess (~1h after waking).
 - **Quick sleepiness log** — a floating button to record how sleepy you feel (1–10) at any
   time of day.
-- **Time-of-day theme** — the UI subtly re-tints for morning, day, evening, and night.
-- **Clear diary-date notice** — every entry shows which night → morning it covers, since
-  you usually log after waking (already the next calendar day).
+- **Single date-driven Log** — one tab edits any day: pick a date (or ‹ prev / next ›,
+  or tap a recent entry) to load it, with a clear **Editing vs New** indicator. The
+  Summary is the app's main page.
+- **Time-of-day theme** — light themes by morning & day, dark by evening & night, with a
+  header badge showing the active mode.
+- **Clear day labels** — the form is split into "this morning" and "yesterday & bedtime"
+  (dinner, caffeine, exercise, melatonin and bedtime belong to the previous calendar day),
+  since you log after waking.
 - **Auto bedroom temperature** via the free [Open-Meteo](https://open-meteo.com) API
   (no API key) using your location, with manual override.
 - **Doctor-style stats**: sleep efficiency, sleep onset latency, total sleep time vs a

@@ -44,27 +44,37 @@
 }
 
 /* ---- Time-of-day themes (set via data-daypart on <html>) ---------------------
-   Each daypart uses a clearly distinct accent hue + background tint so the shift
-   is obvious at a glance, while staying dark and legible. */
+   Daytime (morning, day) = light themes; dusk and night = dark. Each daypart has
+   a distinct accent so the shift is obvious at a glance. */
 :root[data-daypart="morning"] {
-  --bg: #0e0b07; --surface: #17120a; --surface-2: #1f1810; --surface-3: #2a2013;
-  --border: rgba(255,220,150,0.10); --border-strong: rgba(255,220,150,0.18);
-  --accent: #fbbf24; --accent-2: #fb923c; --accent-ink: #2a1c00;   /* amber + orange (sunrise) */
+  /* light, warm sunrise */
+  --bg: #fbf4ea; --surface: #ffffff; --surface-2: #fcf5ec; --surface-3: #f3e6d4;
+  --border: rgba(120,85,30,0.12); --border-strong: rgba(120,85,30,0.20);
+  --text: #2c2117; --text-dim: #6c5a44; --text-faint: #9c8568;
+  --accent: #d97706; --accent-2: #ea580c; --accent-ink: #ffffff;
+  --shadow: 0 8px 24px rgba(120,80,20,0.10); --shadow-sm: 0 2px 8px rgba(120,80,20,0.08);
 }
 :root[data-daypart="day"] {
-  --bg: #0a0f18; --surface: #122033; --surface-2: #182a43; --surface-3: #213a59;
-  --border: rgba(140,200,255,0.12); --border-strong: rgba(140,200,255,0.22);
-  --accent: #38bdf8; --accent-2: #22d3ee; --accent-ink: #04222e;   /* bright sky + cyan (daylight) */
+  /* light, bright daylight */
+  --bg: #eaf1f9; --surface: #ffffff; --surface-2: #f2f7fc; --surface-3: #e0e9f4;
+  --border: rgba(20,45,85,0.10); --border-strong: rgba(20,45,85,0.18);
+  --text: #13233b; --text-dim: #495a73; --text-faint: #7e92ac;
+  --accent: #0284c7; --accent-2: #0891b2; --accent-ink: #ffffff;
+  --shadow: 0 8px 24px rgba(20,45,85,0.10); --shadow-sm: 0 2px 8px rgba(20,45,85,0.08);
 }
 :root[data-daypart="evening"] {
+  /* dark dusk */
   --bg: #0d0916; --surface: #160f24; --surface-2: #1e1531; --surface-3: #2a1f44;
   --border: rgba(200,160,255,0.12); --border-strong: rgba(200,160,255,0.22);
-  --accent: #a78bfa; --accent-2: #f472b6; --accent-ink: #1a1033;   /* violet + pink (dusk) */
+  --text: #e7ecf3; --text-dim: #b6a7cc; --text-faint: #7e6f96;
+  --accent: #a78bfa; --accent-2: #f472b6; --accent-ink: #1a1033;   /* violet + pink */
 }
 :root[data-daypart="night"] {
+  /* deep dark night */
   --bg: #05070d; --surface: #0b0f1a; --surface-2: #111726; --surface-3: #182034;
   --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
-  --accent: #2dd4bf; --accent-2: #6366f1; --accent-ink: #04231f;   /* teal + indigo (deep night) */
+  --text: #e7ecf3; --text-dim: #9aa6b8; --text-faint: #67748a;
+  --accent: #2dd4bf; --accent-2: #6366f1; --accent-ink: #04231f;   /* teal + indigo */
 }
 
 /* Smoothly cross-fade when the daypart flips while the app is open. */

@@ -4,12 +4,29 @@ import { toMinutes, toHHMM, fmtDuration } from './util.js';
 
 const registry = new Map();
 
-// Shared dark-theme defaults.
-const AXIS = '#8b95a7';
-const GRID = 'rgba(255,255,255,0.06)';
-const ACCENT = '#5eead4';
-const ACCENT2 = '#818cf8';
-const BAND = 'rgba(94,234,212,0.12)';
+// Chart palette — refreshed from the active theme (CSS vars) before each render so
+// charts stay legible on both the light (day/morning) and dark (evening/night) themes.
+let AXIS = '#8b95a7';
+let GRID = 'rgba(128,128,128,0.18)';
+let ACCENT = '#5eead4';
+let ACCENT2 = '#818cf8';
+let BAND = 'rgba(94,234,212,0.15)';
+
+function hexToRgba(hex, a) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec((hex || '').trim());
+  if (!m) return `rgba(94,234,212,${a})`;
+  return `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${a})`;
+}
+
+function refreshTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  const g = (n, fb) => cs.getPropertyValue(n).trim() || fb;
+  AXIS = g('--text-dim', AXIS);
+  ACCENT = g('--accent', ACCENT);
+  ACCENT2 = g('--accent-2', ACCENT2);
+  GRID = 'rgba(128,128,128,0.18)'; // neutral, works on light and dark
+  BAND = hexToRgba(ACCENT, 0.15);
+}
 
 function destroyIfExists(id) {
   const prev = registry.get(id);
@@ -18,10 +35,11 @@ function destroyIfExists(id) {
 
 // True when the Chart.js global is available; otherwise draws a fallback note.
 function chartReady(canvas) {
+  refreshTheme();
   if (typeof Chart !== 'undefined') return true;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#8b95a7';
+  ctx.fillStyle = AXIS;
   ctx.font = '13px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('Charts need an internet connection', canvas.width / 2, canvas.height / 2);

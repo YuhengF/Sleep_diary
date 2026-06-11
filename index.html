@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0e16" />
+  <meta name="theme-color" content="#05070d" />
   <title>Sleep Diary</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/tokens.css" />
@@ -33,61 +33,53 @@
   </header>
 
   <main class="app-main">
-    <!-- ================= LOG ================= -->
-    <section class="tab-panel" id="panel-log" data-tab="log">
-      <form id="logForm" class="card form" autocomplete="off">
-        <div class="form-row">
-          <label class="field">
-            <span>Date (the morning you woke up)</span>
-            <input type="date" id="f-date" required />
-          </label>
+    <!-- ================= SUMMARY (main page) ================= -->
+    <section class="tab-panel" id="panel-summary" data-tab="summary">
+      <div class="exp-banner" id="expBanner" hidden></div>
+      <div class="cards" id="summaryCards"></div>
+      <div class="card comments" id="summaryComments"></div>
+      <div class="chart-grid">
+        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
+        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
+        <div class="card chart-card"><h4>Quality &amp; grogginess</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
+        <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
+        <div class="card chart-card"><h4>Daytime sleepiness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- ================= LOG (single date-driven editor) ================= -->
+    <section class="tab-panel" id="panel-log" data-tab="log" hidden>
+      <div class="card log-controls">
+        <div class="mode-banner" id="modeBanner"></div>
+        <div class="log-nav">
+          <button type="button" class="btn ghost icon" id="btn-prev-day" title="Previous day">‹</button>
+          <input type="date" id="f-date" required aria-label="Entry date (morning you woke up)" />
+          <button type="button" class="btn ghost icon" id="btn-next-day" title="Next day">›</button>
+          <button type="button" class="btn ghost small" id="btn-today">Today</button>
+          <button type="button" class="btn primary small" id="btn-new">✚ New</button>
         </div>
         <p class="date-notice" id="dateNotice"></p>
+      </div>
 
-        <h3 class="form-section">Wake</h3>
+      <form id="logForm" class="card form" autocomplete="off">
+        <h3 class="form-section" id="sec-morning">☀️ This morning</h3>
         <div class="form-row three">
           <label class="field"><span>Alarm</span><input type="time" id="f-alarm" /></label>
           <label class="field"><span>Wake time</span><input type="time" id="f-wake" /></label>
           <label class="field"><span>Out of bed</span><input type="time" id="f-outofbed" /></label>
         </div>
-
         <div class="rating" data-key="quality"></div>
         <div class="rating" data-key="wakeDifficulty"></div>
         <div class="rating" data-key="grogginess1h"></div>
+        <div class="form-row two">
+          <label class="field"><span>Morning sunlight time</span><input type="time" id="f-sunlight-time" /></label>
+          <label class="field"><span>Sunlight (min)</span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
+        </div>
 
-        <h3 class="form-section">Night</h3>
+        <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
         <div class="form-row two">
           <label class="field"><span>Bedtime</span><input type="time" id="f-bedtime" /></label>
           <label class="field"><span>Last attempt to sleep</span><input type="time" id="f-onset" /></label>
-        </div>
-        <div class="form-row two">
-          <label class="field tst-field">
-            <span>Total sleep <small id="tstHint">(auto)</small></span>
-            <input type="text" id="f-tst" inputmode="numeric" placeholder="auto" readonly />
-          </label>
-          <label class="field checkbox">
-            <input type="checkbox" id="f-tst-override" />
-            <span>Enter manually</span>
-          </label>
-        </div>
-
-        <h3 class="form-section">Melatonin</h3>
-        <div class="form-row two">
-          <div class="field">
-            <span>Dose (mg)</span>
-            <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
-          </div>
-          <label class="field"><span>Time taken</span><input type="time" id="f-melatonin-time" /></label>
-        </div>
-
-        <h3 class="form-section">Daytime factors</h3>
-        <div class="form-row two">
-          <label class="field"><span>Sunlight time</span><input type="time" id="f-sunlight-time" /></label>
-          <label class="field"><span>Sunlight (min)</span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
-        </div>
-        <div class="form-row two">
-          <label class="field"><span>Exercise start</span><input type="time" id="f-exercise-start" /></label>
-          <label class="field"><span>Exercise (min)</span><input type="number" id="f-exercise-dur" min="0" step="5" inputmode="numeric" /></label>
         </div>
         <div class="form-row two">
           <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
@@ -103,6 +95,29 @@
           </div>
           <label class="field"><span>Caffeine time</span><input type="time" id="f-caffeine-time" /></label>
         </div>
+        <div class="form-row two">
+          <label class="field"><span>Exercise start</span><input type="time" id="f-exercise-start" /></label>
+          <label class="field"><span>Exercise (min)</span><input type="number" id="f-exercise-dur" min="0" step="5" inputmode="numeric" /></label>
+        </div>
+        <div class="form-row two">
+          <div class="field">
+            <span>Melatonin dose (mg)</span>
+            <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
+          </div>
+          <label class="field"><span>Melatonin time</span><input type="time" id="f-melatonin-time" /></label>
+        </div>
+
+        <h3 class="form-section">Sleep totals</h3>
+        <div class="form-row two">
+          <label class="field tst-field">
+            <span>Total sleep <small id="tstHint">(auto)</small></span>
+            <input type="text" id="f-tst" inputmode="numeric" placeholder="auto" readonly />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="f-tst-override" />
+            <span>Enter manually</span>
+          </label>
+        </div>
 
         <h3 class="form-section">Environment</h3>
         <div class="form-row two">
@@ -117,32 +132,18 @@
         <label class="field"><span>Notes</span><textarea id="f-notes" rows="2" placeholder="Anything else worth noting"></textarea></label>
 
         <div class="form-actions">
-          <button type="button" class="btn ghost" id="btn-clear">New / Clear</button>
+          <button type="button" class="btn ghost" id="btn-clear">Reset fields</button>
           <button type="submit" class="btn primary" id="btn-save">Save entry</button>
         </div>
       </form>
-    </section>
 
-    <!-- ================= SUMMARY ================= -->
-    <section class="tab-panel" id="panel-summary" data-tab="summary" hidden>
-      <div class="exp-banner" id="expBanner" hidden></div>
-      <div class="cards" id="summaryCards"></div>
-      <div class="card comments" id="summaryComments"></div>
-      <div class="chart-grid">
-        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
-        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
-        <div class="card chart-card"><h4>Quality &amp; grogginess</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
-        <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
-        <div class="card chart-card"><h4>Daytime sleepiness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+      <div class="card recent">
+        <div class="recent-head">
+          <h3 class="form-section">Recent entries</h3>
+          <input type="month" id="historyMonth" aria-label="Month to browse" />
+        </div>
+        <div class="entry-list" id="entryList"></div>
       </div>
-    </section>
-
-    <!-- ================= HISTORY ================= -->
-    <section class="tab-panel" id="panel-history" data-tab="history" hidden>
-      <div class="history-head">
-        <label class="field inline"><span>Month</span><input type="month" id="historyMonth" /></label>
-      </div>
-      <div class="entry-list" id="entryList"></div>
     </section>
 
     <!-- ================= SETTINGS ================= -->
@@ -198,9 +199,8 @@
 
   <!-- Bottom / top tab bar -->
   <nav class="tab-bar">
-    <button class="tab-btn active" data-go="log">Log</button>
-    <button class="tab-btn" data-go="summary">Summary</button>
-    <button class="tab-btn" data-go="history">History</button>
+    <button class="tab-btn active" data-go="summary">Summary</button>
+    <button class="tab-btn" data-go="log">Log</button>
     <button class="tab-btn" data-go="settings">Settings</button>
   </nav>
 
