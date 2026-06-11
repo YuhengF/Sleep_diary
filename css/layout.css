@@ -100,10 +100,9 @@
 @media (min-width: 1024px) {
   :root { --maxw: 1200px; }
   .chart-grid { grid-template-columns: repeat(3, 1fr); }
-  /* The Log tab uses the full width (calendar | nap | check-ins); the form below
-     stays a comfortable reading width. Settings stays narrow too. */
-  #panel-settings { max-width: 860px; margin-inline: auto; }
-  #panel-log #logForm { max-width: 860px; }
+  /* Summary spans the full width (for charts); the Log & Settings tabs use a
+     single narrower width so the calendar row and the form line up. */
+  #panel-log, #panel-settings { max-width: 920px; margin-inline: auto; }
 }
 
 /* Mobile header: avoid crowding the brand with the badge + sync chip. */
