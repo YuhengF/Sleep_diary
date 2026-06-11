@@ -69,7 +69,7 @@ export function getEntry(dateStr) {
   return month ? month.entries[dateStr] || null : null;
 }
 
-// Add a free-form sleepiness log; marks its month dirty.
+// Add a free-form alertness check-in; marks its month dirty.
 export function addSleepiness(log) {
   const monthKey = monthKeyOf((log.datetime || '').slice(0, 10));
   const month = getMonth(monthKey) || emptyMonth(monthKey);
@@ -78,6 +78,36 @@ export function addSleepiness(log) {
   saveMonthLocal(monthKey, month);
   markDirty(PATHS.month(monthKey));
   return month;
+}
+
+// Patch a check-in's fields (e.g. level, datetime) in whatever month holds it.
+export function updateSleepiness(id, patch) {
+  for (const mk of cachedMonthKeys()) {
+    const m = getMonth(mk);
+    if (!m) continue;
+    const log = m.sleepiness.find((s) => s.id === id);
+    if (log) {
+      Object.assign(log, patch, { updatedAt: new Date().toISOString() });
+      // datetime change can move months; re-bucket if needed.
+      const newMk = monthKeyOf((log.datetime || '').slice(0, 10));
+      if (newMk !== mk) {
+        m.sleepiness = m.sleepiness.filter((s) => s.id !== id);
+        saveMonthLocal(mk, m);
+        markDirty(PATHS.month(mk));
+        return addSleepiness(log);
+      }
+      m.sleepiness.sort((a, b) => (a.datetime < b.datetime ? -1 : 1));
+      saveMonthLocal(mk, m);
+      markDirty(PATHS.month(mk));
+      return m;
+    }
+  }
+  return null;
+}
+
+// Soft-delete (tombstone) so the removal converges across devices on sync.
+export function deleteSleepiness(id) {
+  return updateSleepiness(id, { deleted: true });
 }
 
 // List entries (sorted by date asc) across the loaded months we have cached.
@@ -95,10 +125,19 @@ export function listSleepiness(monthKeys) {
   const out = [];
   for (const mk of monthKeys) {
     const m = getMonth(mk);
-    if (m) out.push(...m.sleepiness);
+    if (m) out.push(...m.sleepiness.filter((s) => !s.deleted));
   }
   out.sort((a, b) => (a.datetime < b.datetime ? -1 : 1));
   return out;
+}
+
+// Check-ins for a specific date (YYYY-MM-DD), excluding tombstones.
+export function listSleepinessForDate(dateStr) {
+  const m = getMonth(monthKeyOf(dateStr));
+  if (!m) return [];
+  return m.sleepiness
+    .filter((s) => !s.deleted && (s.datetime || '').slice(0, 10) === dateStr)
+    .sort((a, b) => (a.datetime < b.datetime ? -1 : 1));
 }
 
 // Which month buckets do we have cached locally?

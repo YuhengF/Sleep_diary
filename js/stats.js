@@ -5,16 +5,29 @@ import {
 } from './util.js';
 
 // Per-night derived metrics.
+// Sleep-doctor style metrics for one night.
+//   Time in bed (TIB)  = bedtime → final out-of-bed.
+//   Sleep onset latency (SOL) = bedtime → last attempt to sleep.
+//   WASO = minutes awake after first falling asleep (night awakenings).
+//   Total sleep time (TST) = time actually asleep
+//        = (onset → wake) − WASO, or the manually entered value.
+//   Sleep efficiency = TST / TIB. Lying in bed awake (long SOL, WASO, or a slow
+//        get-up) lowers it — exactly what a clinician looks for.
+//   Naps are daytime sleep: kept OUT of nighttime efficiency, but added to a
+//        separate 24h total so you can see total sleep and nap's effect on drive.
 export function computeNight(entry, settings) {
   const wake = entry.wakeTime || entry.alarmTime;
   const outOfBed = entry.outOfBedTime || wake;
   const timeInBedMin = durationMinutes(entry.bedtime, outOfBed);
   const solMin = solMinutes(entry.bedtime, entry.sleepOnset);
+  const waso = entry.waso || 0;
+  const napMin = entry.napMinutes || 0;
 
-  // TST: entered value wins; else asleep window (onset->wake), else bed->wake.
+  // TST: entered value wins; else asleep window (onset->wake) minus WASO.
   let tstMin = entry.tstMinutes;
   if (tstMin == null) {
-    tstMin = durationMinutes(entry.sleepOnset || entry.bedtime, wake);
+    const asleepWindow = durationMinutes(entry.sleepOnset || entry.bedtime, wake);
+    tstMin = asleepWindow == null ? null : Math.max(0, asleepWindow - waso);
   }
 
   const efficiencyPct =
@@ -25,7 +38,9 @@ export function computeNight(entry, settings) {
   let tstVsBand = null;
   if (tstMin != null) tstVsBand = tstMin < tMin ? 'below' : tstMin > tMax ? 'above' : 'in';
 
-  return { timeInBedMin, tstMin, solMin, efficiencyPct, tstVsBand };
+  const total24hMin = tstMin == null ? null : tstMin + napMin;
+
+  return { timeInBedMin, tstMin, solMin, wasoMin: waso, napMin, total24hMin, efficiencyPct, tstVsBand };
 }
 
 // Aggregate summary over a list of entries.
@@ -42,9 +57,12 @@ export function summarize(entries, settings) {
     avgEfficiency: round(mean(pick((e, m) => m.efficiencyPct)), 1),
     avgTst: round(mean(pick((e, m) => m.tstMin)), 0),
     avgSol: round(mean(pick((e, m) => m.solMin)), 0),
+    avgWaso: round(mean(pick((e, m) => m.wasoMin)), 0),
+    avgNap: round(mean(pick((e, m) => m.napMin)), 0),
+    avg24h: round(mean(pick((e, m) => m.total24hMin)), 0),
     avgQuality: round(mean(pick((e) => e.quality)), 1),
-    avgWakeDifficulty: round(mean(pick((e) => e.wakeDifficulty)), 1),
-    avgGrogginess: round(mean(pick((e) => e.grogginess1h)), 1),
+    avgWakeEase: round(mean(pick((e) => e.wakeEase)), 1),
+    avgMorningAlertness: round(mean(pick((e) => e.morningAlertness)), 1),
     // Regularity = std-dev (minutes) of the respective clock times.
     bedtimeRegularity: round(std(pick((e) => toMinutes(e.bedtime))), 0),
     wakeRegularity: round(std(pick((e) => toMinutes(e.wakeTime || e.alarmTime))), 0),
@@ -103,6 +121,15 @@ export function comments(summary, experiment, corr) {
 
   if (summary.avgSol != null && summary.avgSol > 30) {
     out.push(`Average time to fall asleep ${summary.avgSol} min — over ~30 min suggests checking wind-down routine and screen/caffeine timing.`);
+  }
+
+  if (summary.avgWaso != null && summary.avgWaso >= 20) {
+    out.push(`Average ${summary.avgWaso} min awake during the night (WASO) — frequent or long awakenings pull sleep efficiency down.`);
+  }
+
+  if (summary.avgNap != null && summary.avgNap >= 30) {
+    const h24 = summary.avg24h != null ? ` (24h total ~${(summary.avg24h / 60).toFixed(1)}h)` : '';
+    out.push(`Averaging ${summary.avgNap} min of daytime naps${h24} — naps add to 24h sleep but can reduce night-time sleep drive; keep them short and early if nights are fragmented.`);
   }
 
   if (summary.wakeRegularity != null && summary.wakeRegularity > 60) {

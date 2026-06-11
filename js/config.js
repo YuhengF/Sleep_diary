@@ -20,13 +20,20 @@ export const MELATONIN_DOSES = [0, 0.2, 0.4, 0.6, 1, 2, 5];
 export const MEAL_AMOUNTS = ['small', 'medium', 'big'];
 export const SNACK_AMOUNTS = ['none', 'small', 'medium', 'big'];
 
-// 1–10 rating metadata: label per endpoint so sliders read intuitively.
+// All rating scales are unified so HIGHER = BETTER (1 worst … 10 best), letting one
+// red→green color ramp and one word ladder apply everywhere. The "negative" metrics
+// are reframed into positive ones (wake ease, alertness) to keep the direction common.
 export const SCALES = {
-  quality: { label: 'Sleep quality', low: 'terrible', high: 'excellent' },
-  wakeDifficulty: { label: 'Wake difficulty', low: 'effortless', high: 'very hard' },
-  grogginess1h: { label: 'Grogginess (~1h after wake)', low: 'fresh', high: 'very groggy' },
-  sleepiness: { label: 'Sleepiness', low: 'fully alert', high: 'nodding off' },
+  quality:          { label: 'Sleep quality', low: 'terrible', high: 'great' },
+  wakeEase:         { label: 'Wake ease', low: 'very hard', high: 'effortless' },
+  morningAlertness: { label: 'Morning alertness (~1h after wake)', low: 'groggy', high: 'fresh' },
+  alertness:        { label: 'Alertness now', low: 'exhausted', high: 'wide awake' },
 };
+
+// Word shown to the left of the selected number (index 1..10).
+export const RATING_WORDS = [
+  '', 'awful', 'bad', 'poor', 'meh', 'so-so', 'fair', 'good', 'great', 'excellent', 'perfect',
+];
 
 export const RATING_MIN = 1;
 export const RATING_MAX = 10;
@@ -63,7 +70,7 @@ export const EXPERIMENT_OUTCOMES = [
   { key: 'tstMin', label: 'Total sleep time' },
   { key: 'efficiencyPct', label: 'Sleep efficiency' },
   { key: 'solMin', label: 'Sleep onset latency' },
-  { key: 'grogginess1h', label: 'Morning grogginess' },
+  { key: 'morningAlertness', label: 'Morning alertness' },
 ];
 
 // localStorage keys.

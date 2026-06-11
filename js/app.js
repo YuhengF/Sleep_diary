@@ -61,12 +61,12 @@ function shiftMonth(monthKey, delta) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Render the calendar for calMonth, dotting days that have entries.
+// Render the calendar for calMonth; dots are colored by each night's quality.
 function renderCalendar() {
   const month = store.getMonth(calMonth);
-  const entryDates = new Set(month ? Object.keys(month.entries) : []);
+  const entries = month ? month.entries : {};
   const selected = document.getElementById('f-date').value;
-  ui.renderCalendar(document.getElementById('calendar'), calMonth, selected, entryDates, {
+  ui.renderCalendar(document.getElementById('calendar'), calMonth, selected, entries, {
     onPick: (date) => { setDate(date); },
     onPrev: () => { calMonth = shiftMonth(calMonth, -1); refreshMonthView(); },
     onNext: () => { calMonth = shiftMonth(calMonth, 1); refreshMonthView(); },
@@ -74,25 +74,46 @@ function renderCalendar() {
   });
 }
 
-// Recent-entries list for calMonth (most recent first).
-function renderRecent() {
-  const month = store.getMonth(calMonth);
-  const entries = month ? Object.values(month.entries) : [];
-  entries.sort((a, b) => (a.date < b.date ? -1 : 1));
-  const title = document.getElementById('recentTitle');
-  if (title) {
-    const [y, m] = calMonth.split('-').map(Number);
-    title.textContent = `Entries · ${new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`;
-  }
-  ui.renderEntryList(entries, settings, editEntry);
+// Editable alertness check-ins for the selected day.
+function renderCheckins() {
+  const date = document.getElementById('f-date').value || todayISO();
+  ui.renderCheckins(date, store.listSleepinessForDate(date), {
+    onEdit: (id, patch) => {
+      const p = {};
+      if (patch.level != null) p.level = patch.level;
+      if (patch.time) p.datetime = new Date(`${date}T${patch.time}:00`).toISOString();
+      store.updateSleepiness(id, p);
+      renderSummaryView();
+      syncAfterWrite(monthKeyOf(date));
+    },
+    onDelete: (id) => {
+      store.deleteSleepiness(id);
+      renderCheckins();
+      renderSummaryView();
+      syncAfterWrite(monthKeyOf(date));
+    },
+    onAdd: () => {
+      // Backfill at the current time (today) or noon for a past day.
+      const isToday = date === todayISO();
+      const time = isToday ? new Date().toTimeString().slice(0, 5) : '12:00';
+      store.addSleepiness({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        datetime: new Date(`${date}T${time}:00`).toISOString(),
+        level: 5, note: null, updatedAt: new Date().toISOString(),
+      });
+      renderCheckins();
+      renderSummaryView();
+      syncAfterWrite(monthKeyOf(date));
+    },
+  });
 }
 
-// Re-render calendar + recent list after changing the displayed month.
+// Re-render calendar + check-ins after changing the displayed month.
 function refreshMonthView() {
   renderCalendar();
-  renderRecent();
+  renderCheckins();
   if (sync.hasToken() && sync.isOnline()) {
-    sync.pullMonth(calMonth).then(() => { renderCalendar(); renderRecent(); }).catch(() => {});
+    sync.pullMonth(calMonth).then(() => { renderCalendar(); renderCheckins(); }).catch(() => {});
   }
 }
 
@@ -106,12 +127,13 @@ function loadDate(date) {
   return !!e;
 }
 
-// Select a date everywhere: form + calendar highlight.
+// Select a date everywhere: form + calendar highlight + that day's check-ins.
 function setDate(date) {
   document.getElementById('f-date').value = date;
   calMonth = monthKeyOf(date);
   loadDate(date);
   renderCalendar();
+  renderCheckins();
 }
 
 // Most recent logged date across cached months, or null.
@@ -126,12 +148,6 @@ function loadInitialLog() {
 }
 
 // Tap a recent entry → load it and bring the form into view.
-function editEntry(date) {
-  setDate(date);
-  goTab('log');
-  document.getElementById('panel-log').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
 function goTab(name) {
   const btn = document.querySelector(`.tab-btn[data-go="${name}"]`);
   if (btn) btn.click();
@@ -156,7 +172,7 @@ async function backgroundSync() {
     await sync.flushDirty();
     renderSummaryView();
     renderCalendar();
-    renderRecent();
+    renderCheckins();
     updateStatusIdle();
   } catch (err) {
     if (err instanceof sync.AuthError) {
@@ -194,11 +210,10 @@ function onSave(ev) {
   const entry = ui.readForm();
   if (!entry) { ui.toast('Pick a date first', 'error'); return; }
   store.upsertEntry(entry);
-  ui.setMode('edit', entry.date); // it's now a saved entry
+  ui.setMode('edit', entry.date); // updates the Save→Update button label
   calMonth = monthKeyOf(entry.date);
   renderSummaryView();
   renderCalendar();
-  renderRecent();
   ui.toast(`Saved ${entry.date}`, 'success');
   syncAfterWrite(monthKeyOf(entry.date));
 }
@@ -269,9 +284,19 @@ function onSaveSleepiness() {
   const log = ui.readSleepiness();
   store.addSleepiness(log);
   ui.closeSleepModal();
-  ui.toast('Sleepiness logged', 'success');
+  ui.toast('Alertness logged', 'success');
   renderSummaryView();
+  renderCheckins();
   syncAfterWrite(monthKeyOf(log.datetime.slice(0, 10)));
+}
+
+function toggleAttrib() {
+  const text = document.getElementById('attribText');
+  const btn = document.getElementById('attribToggle');
+  if (!text) return;
+  const show = text.hidden;
+  text.hidden = !show;
+  if (btn) btn.setAttribute('aria-expanded', String(show));
 }
 
 // ---- Wiring ------------------------------------------------------------------
@@ -306,14 +331,16 @@ function wire() {
   on('btn-test', 'click', onTestConnection);
   on('btn-save-settings', 'click', onSaveSettings);
   on('commentsToggle', 'click', toggleComments);
+  on('attribToggle', 'click', toggleAttrib);
+  on('f-no-alarm', 'change', ui.onAlarmToggle);
 
   // Live TST recompute + bedtime/onset day hints.
   const recompute = debounce(ui.updateTstHint, 100);
-  ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm'].forEach((id) => on(id, 'input', recompute));
+  ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm', 'f-waso'].forEach((id) => on(id, 'input', recompute));
   ['f-bedtime', 'f-onset'].forEach((id) => on(id, 'input', ui.updateNightTimes));
   on('f-tst-override', 'change', ui.updateTstHint);
 
-  // Sleepiness modal.
+  // Alertness check-in modal.
   on('fab-sleepiness', 'click', ui.openSleepModal);
   on('sleep-cancel', 'click', ui.closeSleepModal);
   on('sleep-save', 'click', onSaveSleepiness);
@@ -322,7 +349,7 @@ function wire() {
   // Re-render on tab switch (charts need a visible canvas to size correctly).
   window.addEventListener('tabchange', (e) => {
     if (e.detail === 'summary') renderSummaryView();
-    if (e.detail === 'log') { renderCalendar(); renderRecent(); }
+    if (e.detail === 'log') { renderCalendar(); renderCheckins(); }
   });
 
   // Reconnect / focus → opportunistic sync.
@@ -336,8 +363,7 @@ function init() {
   ui.setDaypartTheme();
   wire();
   renderSummaryView();
-  loadInitialLog();   // sets the date, then renders the calendar
-  renderRecent();
+  loadInitialLog();   // sets the date, then renders the calendar + check-ins
   updateStatusIdle();
   backgroundSync(); // pull + flush if a token exists
   // Keep the theme in step with the clock (e.g. crossing into evening while open).

@@ -1,13 +1,23 @@
 // ui.js — DOM building, form read/fill, rendering. Talks to no network directly.
 import {
-  MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_MIN, RATING_MAX, RATING_DEFAULT,
-  EXPERIMENT_FACTORS, EXPERIMENT_OUTCOMES,
+  MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_WORDS,
+  RATING_MIN, RATING_MAX, RATING_DEFAULT, EXPERIMENT_FACTORS, EXPERIMENT_OUTCOMES,
 } from './config.js';
-import { computeNight } from './stats.js';
 import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice } from './util.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+// Red→amber→green color for a 1..10 value (all scales: higher = better).
+export function ratingColor(v) {
+  if (v == null || isNaN(v)) return 'var(--accent)';
+  const t = Math.max(0, Math.min(1, (v - 1) / 9));
+  return `hsl(${Math.round(t * 125)}, 68%, 48%)`; // 0=red … 125=green
+}
+
+function ratingLabelText(v) {
+  return `${RATING_WORDS[v] || ''} ${v}`.trim();
+}
 
 // ---- One-time builders -------------------------------------------------------
 
@@ -19,13 +29,19 @@ export function buildRatings() {
     el.innerHTML = `
       <div class="rating-head">
         <span class="rating-label">${meta.label}</span>
-        <span class="rating-value" data-out>${RATING_DEFAULT}</span>
+        <span class="rating-value" data-out>${ratingLabelText(RATING_DEFAULT)}</span>
       </div>
       <input type="range" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${RATING_DEFAULT}" data-range />
       <div class="rating-ends"><small>${meta.low}</small><small>${meta.high}</small></div>`;
     const range = $('[data-range]', el);
     const out = $('[data-out]', el);
-    range.addEventListener('input', () => { out.textContent = range.value; });
+    const paint = () => {
+      const v = +range.value;
+      out.textContent = ratingLabelText(v);
+      el.style.setProperty('--rate-color', ratingColor(v));
+    };
+    range.addEventListener('input', paint);
+    paint();
   }
 }
 
@@ -75,8 +91,10 @@ function setRating(key, val) {
   const el = $(`.rating[data-key="${key}"]`);
   if (!el) return;
   const range = $('[data-range]', el);
-  range.value = val == null ? RATING_DEFAULT : val;
-  $('[data-out]', el).textContent = range.value;
+  const v = val == null ? RATING_DEFAULT : val;
+  range.value = v;
+  $('[data-out]', el).textContent = ratingLabelText(+range.value);
+  el.style.setProperty('--rate-color', ratingColor(+range.value));
 }
 
 function getRating(key, rootSel = '.rating') {
@@ -92,12 +110,18 @@ export function fillForm(entry, settings) {
   const e = entry || {};
   $('#f-date').value = e.date || todayISO();
   updateDateNotice();
-  $('#f-alarm').value = e.alarmTime || d.alarmTime || '08:00';
-  $('#f-wake').value = e.wakeTime || ($('#f-alarm').value);
+  // alarmTime === null means the user explicitly turned the alarm off for that day.
+  const noAlarm = !!entry && e.alarmTime === null;
+  $('#f-no-alarm').checked = noAlarm;
+  $('#f-alarm').disabled = noAlarm;
+  $('#f-alarm').value = noAlarm ? '' : (e.alarmTime || d.alarmTime || '08:00');
+  $('#f-wake').value = e.wakeTime || (noAlarm ? '' : $('#f-alarm').value);
   $('#f-outofbed').value = e.outOfBedTime || '';
   setRating('quality', e.quality ?? RATING_DEFAULT);
-  setRating('wakeDifficulty', e.wakeDifficulty ?? RATING_DEFAULT);
-  setRating('grogginess1h', e.grogginess1h ?? RATING_DEFAULT);
+  setRating('wakeEase', e.wakeEase ?? RATING_DEFAULT);
+  setRating('morningAlertness', e.morningAlertness ?? RATING_DEFAULT);
+  $('#f-nap-min').value = e.napMinutes ?? '';
+  $('#f-waso').value = e.waso ?? '';
   $('#f-bedtime').value = e.bedtime || '';
   $('#f-onset').value = e.sleepOnset || '';
   updateNightTimes();
@@ -132,16 +156,19 @@ export function readForm() {
   const dose = parseFloat(getSegment('seg-melatonin'));
   const num = (v) => (v === '' || v == null ? null : Number(v));
 
+  const noAlarm = $('#f-no-alarm').checked;
   return {
     date,
-    alarmTime: $('#f-alarm').value || null,
+    alarmTime: noAlarm ? null : ($('#f-alarm').value || null),
     wakeTime: $('#f-wake').value || null,
     outOfBedTime: $('#f-outofbed').value || null,
     quality: getRating('quality'),
-    wakeDifficulty: getRating('wakeDifficulty'),
-    grogginess1h: getRating('grogginess1h'),
+    wakeEase: getRating('wakeEase'),
+    morningAlertness: getRating('morningAlertness'),
     bedtime: $('#f-bedtime').value || null,
     sleepOnset: $('#f-onset').value || null,
+    waso: num($('#f-waso').value),
+    napMinutes: num($('#f-nap-min').value),
     tstMinutes: tstManual ? num($('#f-tst').value) : null,
     tstSource: tstManual ? 'entered' : 'computed',
     melatonin: { doseMg: isNaN(dose) ? 0 : dose, time: $('#f-melatonin-time').value || null },
@@ -169,40 +196,29 @@ export function updateTstHint() {
   $('#tstHint').textContent = dur != null ? `(auto · ${fmtDuration(dur)})` : '(auto)';
 }
 
-// Clarify which night/morning this entry covers (we log after waking = next day).
-export function updateDateNotice() {
-  const el = $('#dateNotice');
-  const date = $('#f-date').value;
-  // Label the two dated form sections so it's obvious which calendar day each is.
-  const secM = $('#sec-morning'), secN = $('#sec-night');
-  if (date) {
-    const prev = addDays(date, -1);
-    if (secM) secM.innerHTML = `☀️ This morning · <span class="sec-date">${formatNice(date)}</span>`;
-    if (secN) secN.innerHTML = `🌙 Last evening &amp; night · <span class="sec-date">${formatNice(prev)} → ${formatNice(date)}</span>`;
-    updateNightTimes();
-    if (el) el.innerHTML =
-      `<span class="dn-icon">🌙</span> Covers the night of <strong>${formatNice(prev)}</strong> ` +
-      `→ <span class="dn-icon">☀️</span> morning of <strong>${formatNice(date)}</strong>.<br>` +
-      `<small>Dinner, snack, caffeine, exercise, melatonin &amp; bedtime are from ` +
-      `<strong>${formatNice(prev)}</strong> (yesterday); wake, sunlight, grogginess &amp; quality are ` +
-      `<strong>${formatNice(date)}</strong> (this morning).</small>`;
-  } else if (el) {
-    el.textContent = '';
-  }
+// Toggle the alarm field on/off (some days have no alarm).
+export function onAlarmToggle() {
+  const off = $('#f-no-alarm').checked;
+  $('#f-alarm').disabled = off;
+  if (off) $('#f-alarm').value = '';
+  updateTstHint();
 }
 
-// Show whether the user is editing a saved entry or creating a new one.
+// Label the two dated form sections so each shows which calendar day it covers.
+export function updateDateNotice() {
+  const date = $('#f-date').value;
+  if (!date) return;
+  const prev = addDays(date, -1);
+  const secM = $('#sec-morning'), secN = $('#sec-night');
+  if (secM) secM.innerHTML = `☀️ This morning · <span class="sec-date">${formatNice(date)}</span>`;
+  if (secN) secN.innerHTML = `🌙 Last evening &amp; night · <span class="sec-date">${formatNice(prev)} → ${formatNice(date)}</span>`;
+  updateNightTimes();
+}
+
+// Editing vs new is visible from the calendar; here we just adjust the Save label.
 export function setMode(mode, date) {
-  const banner = $('#modeBanner');
   const saveBtn = $('#btn-save');
-  const editing = mode === 'edit';
-  if (banner) {
-    banner.className = `mode-banner ${editing ? 'editing' : 'new'}`;
-    banner.innerHTML = editing
-      ? `<span class="mode-icon">✏️</span> Editing saved entry · <strong>${formatNice(date)}</strong>`
-      : `<span class="mode-icon">✚</span> New entry · <strong>${formatNice(date)}</strong>`;
-  }
-  if (saveBtn) saveBtn.textContent = editing ? 'Update entry' : 'Save entry';
+  if (saveBtn) saveBtn.textContent = mode === 'edit' ? 'Update entry' : 'Save entry';
 }
 
 // Show which calendar day bedtime / last-attempt actually fall on. A time at/after
@@ -220,10 +236,11 @@ export function updateNightTimes() {
   if (o) o.textContent = resolve($('#f-onset').value);
 }
 
-// Month calendar that dots days with entries; tap a day to load it. Navigation +
-// selection are driven by `handlers` (the controller owns the state).
+// Month calendar that dots days with entries (dot colored by that night's quality);
+// tap a day to load it. Navigation + selection are driven by `handlers`.
+// `entries` is a date→entry map for the displayed month.
 const DOW = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-export function renderCalendar(container, monthKey, selectedDate, entryDates, handlers) {
+export function renderCalendar(container, monthKey, selectedDate, entries, handlers) {
   if (!container) return;
   const [y, m] = monthKey.split('-').map(Number);
   const first = new Date(y, m - 1, 1);
@@ -236,11 +253,13 @@ export function renderCalendar(container, monthKey, selectedDate, entryDates, ha
   for (let i = 0; i < startDow; i++) cells += '<span class="cal-cell empty"></span>';
   for (let d = 1; d <= daysInMonth; d++) {
     const iso = `${monthKey}-${String(d).padStart(2, '0')}`;
+    const entry = entries[iso];
     const cls = ['cal-cell', 'cal-day'];
-    if (entryDates.has(iso)) cls.push('has-entry');
+    if (entry) cls.push('has-entry');
     if (iso === selectedDate) cls.push('selected');
     if (iso === today) cls.push('today');
-    cells += `<button type="button" class="${cls.join(' ')}" data-date="${iso}">${d}<span class="cal-dot"></span></button>`;
+    const dotStyle = entry ? ` style="background:${ratingColor(entry.quality)}"` : '';
+    cells += `<button type="button" class="${cls.join(' ')}" data-date="${iso}">${d}<span class="cal-dot"${dotStyle}></span></button>`;
   }
 
   container.innerHTML =
@@ -252,7 +271,7 @@ export function renderCalendar(container, monthKey, selectedDate, entryDates, ha
      </div>
      <div class="cal-dows">${DOW.map((d) => `<span class="cal-dow">${d}</span>`).join('')}</div>
      <div class="cal-grid">${cells}</div>
-     <div class="cal-legend"><span class="lg-dot has"></span> logged &nbsp;·&nbsp; <span class="lg-ring"></span> today</div>`;
+     <div class="cal-legend">dot = logged night, colored by quality (red→green)</div>`;
 
   container.onclick = (e) => {
     const day = e.target.closest('[data-date]');
@@ -290,7 +309,8 @@ export function renderSummary(summary) {
     card('Avg total sleep', h(summary.avgTst), `target ${(summary.targetMin/60).toFixed(1)}–${(summary.targetMax/60).toFixed(1)}h`),
     card('Avg time to fall asleep', h(summary.avgSol), summary.avgSol != null && summary.avgSol > 30 ? 'elevated' : ''),
     card('Avg quality', summary.avgQuality != null ? `${summary.avgQuality}/10` : '—', ''),
-    card('Avg grogginess', summary.avgGrogginess != null ? `${summary.avgGrogginess}/10` : '—', ''),
+    card('Avg wake ease', summary.avgWakeEase != null ? `${summary.avgWakeEase}/10` : '—', ''),
+    card('Avg morning alertness', summary.avgMorningAlertness != null ? `${summary.avgMorningAlertness}/10` : '—', ''),
     card('Wake-time regularity', summary.wakeRegularity != null ? `±${summary.wakeRegularity}m` : '—',
       summary.wakeRegularity != null && summary.wakeRegularity > 60 ? 'variable' : 'steady'),
     card('Bedtime regularity', summary.bedtimeRegularity != null ? `±${summary.bedtimeRegularity}m` : '—',
@@ -318,30 +338,51 @@ export function renderExpBanner(settings, corr) {
   el.innerHTML = `<span class="exp-dot"></span> Studying: <strong>${exp.factorLabel}</strong>${dayInfo}${rInfo}`;
 }
 
-// ---- History -----------------------------------------------------------------
+// ---- Alertness check-ins (editable in place) ---------------------------------
 
-export function renderEntryList(entries, settings, onEdit) {
-  const host = $('#entryList');
-  if (!entries.length) {
-    host.innerHTML = '<div class="card empty">No entries this month.</div>';
-    return;
-  }
-  host.innerHTML = '';
-  for (const e of [...entries].reverse()) {
-    const m = computeNight(e, settings);
-    const row = document.createElement('button');
-    row.type = 'button';
-    row.className = 'entry-row card';
-    row.innerHTML = `
-      <div class="entry-date">${e.date}</div>
-      <div class="entry-meta">
-        <span>TST ${m.tstMin != null ? fmtDuration(m.tstMin) : '—'}</span>
-        <span>Eff ${m.efficiencyPct != null ? m.efficiencyPct + '%' : '—'}</span>
-        <span>Q ${e.quality ?? '—'}/10</span>
+// Render the selected day's check-ins: each row has an editable time + score and a
+// delete button. `handlers` = { onEdit(id, {time?, level?}), onDelete(id), onAdd() }.
+export function renderCheckins(dateStr, logs, handlers) {
+  const host = $('#checkinList');
+  if (!host) return;
+  const title = $('#checkinTitle');
+  if (title) title.textContent = `Alertness check-ins · ${formatNice(dateStr)}`;
+
+  if (!logs.length) {
+    host.innerHTML = '<div class="checkin-empty">No check-ins this day.</div>';
+  } else {
+    host.innerHTML = logs.map((l) => {
+      const time = (l.datetime || '').slice(11, 16);
+      return `<div class="checkin-row" data-id="${l.id}" style="--rate-color:${ratingColor(l.level)}">
+        <input type="time" class="checkin-time" value="${time}" data-edit="time" aria-label="Check-in time" />
+        <input type="range" class="checkin-score" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${l.level}" data-edit="level" aria-label="Alertness score" />
+        <span class="checkin-val">${ratingLabelText(l.level)}</span>
+        <button type="button" class="checkin-del" data-del aria-label="Delete check-in">✕</button>
       </div>`;
-    row.addEventListener('click', () => onEdit(e.date));
-    host.appendChild(row);
+    }).join('');
   }
+
+  host.oninput = (e) => {
+    const row = e.target.closest('[data-id]');
+    if (!row) return;
+    const id = row.dataset.id;
+    if (e.target.dataset.edit === 'level') {
+      const v = +e.target.value;
+      row.style.setProperty('--rate-color', ratingColor(v));
+      const val = row.querySelector('.checkin-val');
+      if (val) val.textContent = ratingLabelText(v);
+      handlers.onEdit(id, { level: v });
+    } else if (e.target.dataset.edit === 'time') {
+      if (e.target.value) handlers.onEdit(id, { time: e.target.value });
+    }
+  };
+  host.onclick = (e) => {
+    const del = e.target.closest('[data-del]');
+    if (del) handlers.onDelete(del.closest('[data-id]').dataset.id);
+  };
+
+  const addBtn = $('#checkinAdd');
+  if (addBtn) addBtn.onclick = () => handlers.onAdd();
 }
 
 // ---- Settings ----------------------------------------------------------------
@@ -389,10 +430,10 @@ export function readSettings(prev) {
   };
 }
 
-// ---- Sleepiness modal --------------------------------------------------------
+// ---- Alertness check-in modal ------------------------------------------------
 
 export function openSleepModal() {
-  setRating('sleepiness', 0);
+  setRating('alertness', RATING_DEFAULT);
   $('#sleep-note').value = '';
   $('#sleepModal').hidden = false;
 }
@@ -402,7 +443,7 @@ export function readSleepiness() {
   return {
     id: uuid(),
     datetime: new Date().toISOString(),
-    level: getRating('sleepiness'),
+    level: getRating('alertness'),
     note: $('#sleep-note').value.trim() || null,
     updatedAt: new Date().toISOString(),
   };

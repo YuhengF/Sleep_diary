@@ -168,7 +168,7 @@ export function renderTstTrend(canvas, entries, settings) {
   }));
 }
 
-// Quality / grogginess trend (1–10 axis).
+// Quality / morning-alertness trend (1–10 axis; both higher = better).
 export function renderQualityTrend(canvas, entries) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
@@ -180,7 +180,7 @@ export function renderQualityTrend(canvas, entries) {
       labels,
       datasets: [
         { label: 'Quality', data: entries.map((e) => e.quality ?? null), borderColor: ACCENT, backgroundColor: ACCENT, tension: 0.3, spanGaps: true },
-        { label: 'Grogginess', data: entries.map((e) => e.grogginess1h ?? null), borderColor: ACCENT2, backgroundColor: ACCENT2, tension: 0.3, spanGaps: true },
+        { label: 'Morning alertness', data: entries.map((e) => e.morningAlertness ?? null), borderColor: ACCENT2, backgroundColor: ACCENT2, tension: 0.3, spanGaps: true },
       ],
     },
     options: baseOptions({
@@ -219,7 +219,7 @@ export function renderFactorScatter(canvas, corr, factorLabel, outcomeLabel) {
   }));
 }
 
-// Free sleepiness logs by hour-of-day.
+// Free alertness check-ins by hour-of-day.
 export function renderSleepinessByHour(canvas, logs) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
@@ -230,7 +230,7 @@ export function renderSleepinessByHour(canvas, logs) {
   });
   registry.set(canvas.id, new Chart(canvas, {
     type: 'scatter',
-    data: { datasets: [{ label: 'Sleepiness', data: points, backgroundColor: ACCENT2, pointRadius: 5 }] },
+    data: { datasets: [{ label: 'Alertness', data: points, backgroundColor: ACCENT2, pointRadius: 5 }] },
     options: baseOptions({
       plugins: {
         tooltip: { callbacks: { label: (c) => `${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — level ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },

@@ -75,20 +75,22 @@ input[readonly] { opacity: 0.7; }
 .rating-head { display: flex; justify-content: space-between; align-items: baseline; }
 .rating-label { font-size: 13px; font-weight: 600; color: var(--text); }
 .rating-value {
-  font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--accent);
-  min-width: 22px; text-align: right;
+  font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--rate-color, var(--accent));
+  text-align: right; white-space: nowrap;
 }
 .rating-ends { display: flex; justify-content: space-between; margin-top: 2px; }
 .rating-ends small { color: var(--text-faint); }
 
+/* Slider track is a fixed red→green ramp (all scales: left=worse, right=better);
+   the thumb is tinted to the selected value via --rate-color. */
 input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; }
-input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
-input[type="range"]::-moz-range-track { height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, #f87171, #fbbf24, #34d399); }
+input[type="range"]::-moz-range-track { height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, #f87171, #fbbf24, #34d399); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -8px;
-  border-radius: 50%; background: #fff; border: 3px solid var(--accent); box-shadow: var(--shadow-sm);
+  border-radius: 50%; background: #fff; border: 3px solid var(--rate-color, var(--accent)); box-shadow: var(--shadow-sm);
 }
-input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); }
+input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--rate-color, var(--accent)); }
 
 /* ---- Segmented / chips ---- */
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -99,11 +101,12 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 }
 .chip.active { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 
-/* ---- Stat cards ---- */
-.stat { display: flex; flex-direction: column; gap: 2px; }
-.stat-value { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
-.stat-label { font-size: 12px; color: var(--text-dim); }
-.stat-sub { font-size: 11px; color: var(--text-faint); }
+/* ---- Stat cards (compact) ---- */
+.cards { gap: var(--s2); }
+.stat { display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; }
+.stat-value { font-size: 17px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat-label { font-size: 11px; color: var(--text-dim); }
+.stat-sub { font-size: 10px; color: var(--text-faint); }
 .stat.good .stat-value { color: var(--good); }
 .stat.warn .stat-value { color: var(--warn); }
 .stat.bad .stat-value { color: var(--bad); }
@@ -146,32 +149,52 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 
 .sec-date { color: var(--text-dim); font-weight: 600; text-transform: none; letter-spacing: 0; }
 
+/* ---- Log top: calendar + check-ins (stacked on mobile, side-by-side on desktop) ---- */
+.log-top { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s3); }
+
 /* ---- Calendar (date picker that dots logged days) ---- */
-.calendar { display: flex; flex-direction: column; gap: var(--s2); }
+.calendar { display: flex; flex-direction: column; gap: 6px; }
 .cal-head { display: flex; align-items: center; gap: var(--s2); }
-.cal-title { flex: 1; text-align: center; font-weight: 700; font-size: 15px; }
-.cal-dows, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.cal-dow { text-align: center; font-size: 11px; color: var(--text-faint); font-weight: 600; }
+.cal-title { flex: 1; text-align: center; font-weight: 700; font-size: 14px; }
+.cal-dows, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { text-align: center; font-size: 10px; color: var(--text-faint); font-weight: 600; }
 .cal-cell { aspect-ratio: 1; }
 .cal-cell.empty { visibility: hidden; }
 .cal-day {
-  position: relative; width: 100%; height: 100%; min-height: 40px; padding: 0;
+  position: relative; width: 100%; height: 100%; min-height: 32px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
-  border-radius: var(--r-sm); font-size: 14px; font-variant-numeric: tabular-nums;
+  border-radius: var(--r-sm); font-size: 13px; font-variant-numeric: tabular-nums;
 }
 .cal-day .cal-dot {
-  position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-  width: 5px; height: 5px; border-radius: 50%; background: transparent;
+  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: transparent;
 }
-.cal-day.has-entry { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); font-weight: 700; }
-.cal-day.has-entry .cal-dot { background: var(--accent); }
+.cal-day.has-entry { font-weight: 700; }
 .cal-day.today { outline: 2px solid var(--accent-2); outline-offset: -2px; }
 .cal-day.selected { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
-.cal-day.selected .cal-dot { background: var(--accent-ink); }
-.cal-legend { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-faint); margin-top: 2px; }
-.cal-legend .lg-dot.has { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
-.cal-legend .lg-ring { width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--accent-2); display: inline-block; }
+.cal-legend { font-size: 10px; color: var(--text-faint); margin-top: 2px; text-align: center; }
+
+/* ---- Alertness check-ins (editable in place) ---- */
+.checkins-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-bottom: var(--s2); }
+.checkins-head .form-section { margin: 0; border: none; }
+.checkin-list { display: flex; flex-direction: column; gap: 6px; }
+.checkin-empty { color: var(--text-faint); font-size: 13px; padding: var(--s2) 0; }
+.checkin-row {
+  display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--s2);
+  padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2);
+}
+.checkin-row input[type="time"] { min-height: 36px; padding: 4px 6px; width: auto; }
+.checkin-row input[type="range"] { height: 24px; }
+.checkin-val { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--rate-color, var(--accent)); white-space: nowrap; min-width: 56px; text-align: right; }
+.checkin-del { border: none; background: transparent; color: var(--text-faint); font-size: 14px; padding: 4px 6px; min-height: 36px; }
+.checkin-del:hover { color: var(--bad); }
+
+/* ---- Day-attribution "?" toggle ---- */
+.attrib { margin-bottom: var(--s2); }
+.attrib-btn { background: transparent; border: 1px dashed var(--border-strong); color: var(--text-dim); border-radius: var(--r-pill); padding: 5px 12px; font-size: 12px; font-weight: 600; }
+.attrib-text { margin-top: var(--s2); font-size: 13px; line-height: 1.55; color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; }
+.attrib-text[hidden] { display: none; }
 
 /* ---- Summary header + collapsible suggestions ---- */
 .summary-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); }
