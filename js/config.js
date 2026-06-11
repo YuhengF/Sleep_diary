@@ -61,6 +61,7 @@ export const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   defaults: { alarmTime: '08:00', targetTstMin: 510, targetTstMax: 540 }, // 8.5–9h
   location: { mode: 'geo', lat: null, lon: null, manualTempC: null },
+  timezone: 'America/Los_Angeles', // all timestamps stored as UTC, shown in this zone
   aiPrompt: DEFAULT_AI_PROMPT,
   includeNotes: true,
   mottos: DEFAULT_MOTTOS,

@@ -3,7 +3,7 @@
 // year (intervals + weekdays preserved); token and location are never included.
 import * as store from './storage.js';
 import { DEFAULT_AI_PROMPT } from './config.js';
-import { addDays } from './util.js';
+import { addDays, zonedDateStr, zonedTimeStr } from './util.js';
 
 // Concise field legend so the AI understands the data without guessing.
 const LEGEND = {
@@ -17,6 +17,8 @@ const LEGEND = {
     'TST = (sleepOnset→wake) − WASO. Naps are daytime sleep, excluded from efficiency.',
   _privacy: 'Dates are pseudonymized: shifted by a constant offset so real calendar dates ' +
     'are hidden while gaps between days and weekdays are preserved. Times of day are real.',
+  _timezone: 'All clock times and check-in times are in the patient\'s local timezone ' +
+    '(see settings.timezone). Stored timestamps are UTC; here they are already converted.',
   fields: {
     date: 'wake-up morning (pseudo)', alarmTime: 'HH:MM or null (no alarm)',
     wakeTime: 'HH:MM', outOfBedTime: 'HH:MM', bedtime: 'HH:MM (prev evening or post-midnight)',
@@ -60,22 +62,28 @@ export function buildPayload(question, settings) {
   const months = store.cachedMonthKeys();
   const entries = store.listEntries(months);
   const checkins = store.listSleepiness(months);
+  const tz = settings.timezone || 'America/Los_Angeles';
 
   const allDates = [
     ...entries.map((e) => e.date),
-    ...checkins.map((c) => (c.datetime || '').slice(0, 10)),
+    ...checkins.map((c) => zonedDateStr(c.datetime, tz)),
   ].filter(Boolean).sort();
   const offset = allDates.length ? offsetDaysFor(allDates[0]) : 0;
   const shift = (iso) => addDays(iso, offset);
-  const shiftDT = (dt) => new Date(Date.parse(dt) + offset * 86400000).toISOString();
   const includeNotes = settings.includeNotes !== false;
 
   return {
     legend: LEGEND,
     question: question || '(Please give a general analysis and concrete suggestions.)',
-    settings: { targetSleepMin: settings.defaults.targetTstMin, targetSleepMax: settings.defaults.targetTstMax, experiment: settings.experiment },
+    settings: { timezone: tz, targetSleepMin: settings.defaults.targetTstMin, targetSleepMax: settings.defaults.targetTstMax, experiment: settings.experiment },
     entries: entries.map((e) => cleanEntry(e, shift, includeNotes)),
-    checkins: checkins.map((c) => ({ datetime: shiftDT(c.datetime), level: c.level, note: includeNotes ? (c.note || null) : null })),
+    // Check-ins as zoned date+time (pseudonymized date), so the AI reads real local times.
+    checkins: checkins.map((c) => ({
+      date: shift(zonedDateStr(c.datetime, tz)),
+      time: zonedTimeStr(c.datetime, tz),
+      level: c.level,
+      note: includeNotes ? (c.note || null) : null,
+    })),
   };
 }
 

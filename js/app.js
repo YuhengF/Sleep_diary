@@ -6,7 +6,7 @@ import * as charts from './charts.js';
 import { resolveBedroomTemp } from './weather.js';
 import * as ai from './ai-export.js';
 import { summarize, correlate, comments } from './stats.js';
-import { monthKeyOf, todayISO, debounce } from './util.js';
+import { monthKeyOf, todayISO, debounce, zonedDateStr, zonedTimeStr, wallToUTC } from './util.js';
 
 let settings = store.getSettings();
 
@@ -40,7 +40,7 @@ function renderSummaryView() {
   charts.renderTimeline(document.getElementById('chartTimeline'), entries, settings);
   charts.renderTstTrend(document.getElementById('chartTst'), entries, settings);
   charts.renderQualityTrend(document.getElementById('chartQuality'), entries);
-  charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), store.listSleepiness(visibleMonthKeys()));
+  charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), store.listSleepiness(visibleMonthKeys()), settings.timezone || 'America/Los_Angeles');
 
   const scatterCard = document.getElementById('scatterCard');
   if (exp?.active) {
@@ -75,17 +75,23 @@ function renderCalendar() {
   });
 }
 
-// Editable alertness check-ins for the selected day.
+// Editable alertness check-ins for the selected day (times shown in the user's tz).
 function renderCheckins() {
   const date = document.getElementById('f-date').value || todayISO();
-  ui.renderCheckins(date, store.listSleepinessForDate(date), {
+  const tz = settings.timezone || 'America/Los_Angeles';
+  // Check-ins are stored in UTC; bucket them by their zoned date so they land on
+  // the day the user actually logged them, not the UTC date.
+  const dayLogs = store.listSleepiness(store.cachedMonthKeys())
+    .filter((c) => zonedDateStr(c.datetime, tz) === date);
+
+  ui.renderCheckins(date, dayLogs, tz, {
     onEdit: (id, patch) => {
       const p = {};
       if (patch.level != null) p.level = patch.level;
-      if (patch.time) p.datetime = new Date(`${date}T${patch.time}:00`).toISOString();
+      if (patch.time) p.datetime = wallToUTC(date, patch.time, tz);
       store.updateSleepiness(id, p);
       renderSummaryView();
-      syncAfterWrite(monthKeyOf(date));
+      syncAfterWrite(monthKeyOf(zonedDateStr(p.datetime || new Date().toISOString(), tz)));
     },
     onDelete: (id) => {
       store.deleteSleepiness(id);
@@ -94,17 +100,17 @@ function renderCheckins() {
       syncAfterWrite(monthKeyOf(date));
     },
     onAdd: () => {
-      // Backfill at the current time (today) or noon for a past day.
-      const isToday = date === todayISO();
-      const time = isToday ? new Date().toTimeString().slice(0, 5) : '12:00';
+      // Backfill at the current time (if today) or noon, interpreted in the user's tz.
+      const time = (zonedDateStr(new Date().toISOString(), tz) === date)
+        ? zonedTimeStr(new Date().toISOString(), tz) : '12:00';
+      const datetime = wallToUTC(date, time, tz);
       store.addSleepiness({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        datetime: new Date(`${date}T${time}:00`).toISOString(),
-        level: 5, note: null, updatedAt: new Date().toISOString(),
+        datetime, level: 5, note: null, updatedAt: new Date().toISOString(),
       });
       renderCheckins();
       renderSummaryView();
-      syncAfterWrite(monthKeyOf(date));
+      syncAfterWrite(monthKeyOf(zonedDateStr(datetime, tz)));
     },
   });
 }
@@ -275,6 +281,7 @@ function onSaveSettings() {
   ui.toast('Settings saved', 'success');
   ui.startMottos(settings.mottos);
   renderSummaryView();
+  renderCheckins();
   if (sync.hasToken() && sync.isOnline()) {
     sync.syncSettings().then(updateStatusIdle).catch(() => updateStatusIdle());
   } else {
@@ -377,6 +384,7 @@ function wire() {
 }
 
 function init() {
+  store.migrateScalesOnce(); // one-time fix for old (flipped) records
   ui.setDaypartTheme();
   ui.startMottos(settings.mottos);
   wire();

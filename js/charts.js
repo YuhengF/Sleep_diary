@@ -1,6 +1,6 @@
 // charts.js — Chart.js (UMD global `Chart`) rendering. Registry avoids "canvas in use".
 import { computeNight } from './stats.js';
-import { toMinutes, toHHMM, fmtDuration } from './util.js';
+import { toMinutes, toHHMM, fmtDuration, zonedHourFloat, zonedDateStr } from './util.js';
 
 const registry = new Map();
 
@@ -220,14 +220,13 @@ export function renderFactorScatter(canvas, corr, factorLabel, outcomeLabel) {
 }
 
 // Free alertness check-ins by hour-of-day.
-export function renderSleepinessByHour(canvas, logs) {
+export function renderSleepinessByHour(canvas, logs, tz) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   if (!logs.length) return noData(canvas);
-  const points = logs.map((l) => {
-    const d = new Date(l.datetime);
-    return { x: d.getHours() + d.getMinutes() / 60, y: l.level, note: l.note, date: l.datetime.slice(0, 10) };
-  });
+  const points = logs.map((l) => ({
+    x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
+  }));
   registry.set(canvas.id, new Chart(canvas, {
     type: 'scatter',
     data: { datasets: [{ label: 'Alertness', data: points, backgroundColor: ACCENT2, pointRadius: 5 }] },

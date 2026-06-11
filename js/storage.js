@@ -173,6 +173,34 @@ export function clearDirty(path) {
   writeJSON(LS.dirty, getDirty().filter((p) => p !== path));
 }
 
+// One-time migration: scales were reframed to "higher = better" and renamed.
+// Convert old fields by INVERTING (11 − value) so existing records read correctly:
+//   wakeDifficulty → wakeEase, grogginess1h → morningAlertness, and check-in
+//   level (was sleepiness) → alertness. Guarded so it runs exactly once.
+export function migrateScalesOnce() {
+  if (localStorage.getItem('sd.migratedScales') === '1') return;
+  const clamp = (v) => Math.max(1, Math.min(10, Math.round(v)));
+  const now = new Date().toISOString();
+  for (const mk of cachedMonthKeys()) {
+    const m = getMonth(mk);
+    if (!m) continue;
+    let changed = false;
+    for (const e of Object.values(m.entries)) {
+      if (e.wakeDifficulty != null && e.wakeEase == null) {
+        e.wakeEase = clamp(11 - e.wakeDifficulty); delete e.wakeDifficulty; e.updatedAt = now; changed = true;
+      }
+      if (e.grogginess1h != null && e.morningAlertness == null) {
+        e.morningAlertness = clamp(11 - e.grogginess1h); delete e.grogginess1h; e.updatedAt = now; changed = true;
+      }
+    }
+    for (const c of m.sleepiness) {
+      if (!c.deleted && c.level != null) { c.level = clamp(11 - c.level); c.updatedAt = now; changed = true; }
+    }
+    if (changed) { saveMonthLocal(mk, m); markDirty(PATHS.month(mk)); }
+  }
+  localStorage.setItem('sd.migratedScales', '1');
+}
+
 // ---- Token (browser-only; never synced) --------------------------------------
 export function getToken() {
   return localStorage.getItem(LS.token) || null;

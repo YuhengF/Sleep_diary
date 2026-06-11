@@ -82,6 +82,40 @@ export function formatNice(iso) {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// ---- Timezone helpers --------------------------------------------------------
+// Records store UTC ISO timestamps; these convert to/from a configured IANA zone
+// (e.g. "America/Los_Angeles") so display is consistent across devices.
+
+const DEFAULT_TZ = 'America/Los_Angeles';
+
+// Break a UTC instant into wall-clock parts in `tz`.
+export function zonedParts(iso, tz = DEFAULT_TZ) {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  });
+  const p = Object.fromEntries(fmt.formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, hour: +p.hour, minute: +p.minute };
+}
+
+export function zonedDateStr(iso, tz) { return zonedParts(iso, tz).date; }
+export function zonedTimeStr(iso, tz) { return zonedParts(iso, tz).time; }
+export function zonedHourFloat(iso, tz) { const p = zonedParts(iso, tz); return p.hour + p.minute / 60; }
+
+// Offset (ms) of `tz` from UTC at the given instant.
+function tzOffsetMs(date, tz) {
+  const utc = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const loc = new Date(date.toLocaleString('en-US', { timeZone: tz }));
+  return loc.getTime() - utc.getTime();
+}
+
+// Wall-clock date+time in `tz` -> UTC ISO instant.
+export function wallToUTC(dateStr, timeStr, tz = DEFAULT_TZ) {
+  const naive = new Date(`${dateStr}T${timeStr || '00:00'}:00Z`);
+  const off = tzOffsetMs(naive, tz);
+  return new Date(naive.getTime() - off).toISOString();
+}
+
 export function mean(nums) {
   const xs = nums.filter((n) => n != null && !isNaN(n));
   if (!xs.length) return null;

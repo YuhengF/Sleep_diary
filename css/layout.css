@@ -104,18 +104,6 @@
   #panel-log, #panel-settings { max-width: 860px; margin-inline: auto; }
 }
 
-/* Calendar + check-ins side by side once there's room (tablet/desktop). */
-@media (min-width: 700px) {
-  .log-top { flex-direction: row; align-items: flex-start; }
-  .log-top .log-controls { flex: 0 0 320px; }
-  .log-top .checkins { flex: 1 1 auto; align-self: stretch; }
-}
-
-/* Phones: stack form fields so adjacent inputs never overlap. */
-@media (max-width: 560px) {
-  .form-row.two, .form-row.three { grid-template-columns: 1fr; }
-}
-
 /* Mobile header: avoid crowding the brand with the badge + sync chip. */
 @media (max-width: 480px) {
   .app-header { padding: 0 var(--s3); }

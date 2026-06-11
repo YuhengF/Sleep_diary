@@ -3,7 +3,7 @@ import {
   MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_WORDS,
   RATING_MIN, RATING_MAX, RATING_DEFAULT, EXPERIMENT_FACTORS, EXPERIMENT_OUTCOMES,
 } from './config.js';
-import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice } from './util.js';
+import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice, zonedTimeStr } from './util.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -342,7 +342,7 @@ export function renderExpBanner(settings, corr) {
 
 // Render the selected day's check-ins: each row has an editable time + score and a
 // delete button. `handlers` = { onEdit(id, {time?, level?}), onDelete(id), onAdd() }.
-export function renderCheckins(dateStr, logs, handlers) {
+export function renderCheckins(dateStr, logs, tz, handlers) {
   const host = $('#checkinList');
   if (!host) return;
   const title = $('#checkinTitle');
@@ -352,7 +352,7 @@ export function renderCheckins(dateStr, logs, handlers) {
     host.innerHTML = '<div class="checkin-empty">No check-ins this day.</div>';
   } else {
     host.innerHTML = logs.map((l) => {
-      const time = (l.datetime || '').slice(11, 16);
+      const time = zonedTimeStr(l.datetime, tz);
       return `<div class="checkin-row" data-id="${l.id}" style="--rate-color:${ratingColor(l.level)}">
         <input type="time" class="checkin-time" value="${time}" data-edit="time" aria-label="Check-in time" />
         <input type="range" class="checkin-score" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${l.level}" data-edit="level" aria-label="Alertness score" />
@@ -395,6 +395,7 @@ export function fillSettings(settings, hasToken) {
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
   $('#f-loc-mode').value = settings.location.mode || 'geo';
   $('#f-manual-temp').value = settings.location.manualTempC ?? '';
+  $('#f-timezone').value = settings.timezone || 'America/Los_Angeles';
   $('#f-ai-prompt').value = settings.aiPrompt || '';
   $('#f-include-notes').checked = settings.includeNotes !== false;
   $('#f-mottos').value = (settings.mottos || []).join('\n');
@@ -412,6 +413,7 @@ export function readSettings(prev) {
   const tMax = parseFloat($('#f-target-max').value);
   return {
     ...prev,
+    timezone: $('#f-timezone').value || 'America/Los_Angeles',
     aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
     includeNotes: $('#f-include-notes').checked,
     mottos: $('#f-mottos').value.split('\n').map((s) => s.trim()).filter(Boolean),

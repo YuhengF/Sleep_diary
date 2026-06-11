@@ -252,3 +252,23 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .modal-backdrop[hidden] { display: none; }
 .modal { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: var(--s3); }
 .modal h3 { font-size: 16px; }
+
+/* ---- Responsive overrides (kept in this file, after the component base styles,
+        so they win the cascade over the earlier-loaded layout.css) ---- */
+
+/* Calendar + check-ins side by side once there's room (tablet/desktop). */
+@media (min-width: 700px) {
+  .log-top { flex-direction: row; align-items: flex-start; }
+  .log-top .log-controls { flex: 0 0 300px; }
+  .log-top .checkins { flex: 1 1 auto; align-self: stretch; }
+}
+
+/* Phones: one field per row so adjacent inputs never crowd/overlap. */
+@media (max-width: 640px) {
+  .form-row.two, .form-row.three { grid-template-columns: 1fr; }
+  .form { gap: var(--s2); }
+  .card { padding: var(--s3); }
+}
+
+/* Check-ins stay compact: ~3 rows visible, scroll beyond. */
+.checkin-list { max-height: 162px; overflow-y: auto; }
