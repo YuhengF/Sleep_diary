@@ -273,6 +273,7 @@ function onSaveSettings() {
   store.saveSettings(settings);
   store.markDirty('settings.json');
   ui.toast('Settings saved', 'success');
+  ui.startMottos(settings.mottos);
   renderSummaryView();
   if (sync.hasToken() && sync.isOnline()) {
     sync.syncSettings().then(updateStatusIdle).catch(() => updateStatusIdle());
@@ -377,6 +378,7 @@ function wire() {
 
 function init() {
   ui.setDaypartTheme();
+  ui.startMottos(settings.mottos);
   wire();
   renderSummaryView();
   loadInitialLog();   // sets the date, then renders the calendar + check-ins

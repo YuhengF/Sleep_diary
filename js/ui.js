@@ -396,6 +396,8 @@ export function fillSettings(settings, hasToken) {
   $('#f-loc-mode').value = settings.location.mode || 'geo';
   $('#f-manual-temp').value = settings.location.manualTempC ?? '';
   $('#f-ai-prompt').value = settings.aiPrompt || '';
+  $('#f-include-notes').checked = settings.includeNotes !== false;
+  $('#f-mottos').value = (settings.mottos || []).join('\n');
   $('#f-exp-active').checked = !!settings.experiment.active;
   $('#f-exp-factor').value = settings.experiment.factor;
   $('#f-exp-outcome').value = settings.experiment.outcome || 'quality';
@@ -411,6 +413,8 @@ export function readSettings(prev) {
   return {
     ...prev,
     aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
+    includeNotes: $('#f-include-notes').checked,
+    mottos: $('#f-mottos').value.split('\n').map((s) => s.trim()).filter(Boolean),
     defaults: {
       alarmTime: $('#f-default-alarm').value || '08:00',
       targetTstMin: Math.round((isNaN(tMin) ? 8.5 : tMin) * 60),
@@ -479,6 +483,25 @@ export function setSyncStatus(state, text) {
   const dot = $('#syncDot');
   $('#syncText').textContent = text;
   dot.className = `dot ${state}`; // synced | syncing | offline | local | error
+}
+
+// Rotating motto banner at the very top. Restartable when settings change.
+let mottoTimer = null;
+export function startMottos(mottos) {
+  const bar = $('#mottoBar');
+  if (!bar) return;
+  if (mottoTimer) { clearInterval(mottoTimer); mottoTimer = null; }
+  const list = (mottos || []).filter(Boolean);
+  if (!list.length) { bar.hidden = true; bar.textContent = ''; return; }
+  bar.hidden = false;
+  let i = Math.floor(Math.random() * list.length);
+  const show = () => {
+    bar.style.opacity = '0';
+    setTimeout(() => { bar.textContent = list[i % list.length]; bar.style.opacity = '1'; }, 200);
+    i++;
+  };
+  show();
+  if (list.length > 1) mottoTimer = setInterval(show, 12000);
 }
 
 // Tint the whole UI by time of day. Sets data-daypart on <html> (CSS does the rest).

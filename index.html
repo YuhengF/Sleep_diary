@@ -18,6 +18,7 @@
     referrerpolicy="no-referrer"></script>
 </head>
 <body>
+  <div class="motto-bar" id="mottoBar" aria-live="polite"></div>
   <header class="app-header">
     <div class="brand">
       <span class="brand-mark">◐</span>
@@ -43,6 +44,15 @@
       </div>
       <div class="card comments" id="summaryComments" hidden></div>
 
+      <div class="cards" id="summaryCards"></div>
+      <div class="chart-grid">
+        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
+        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
+        <div class="card chart-card"><h4>Quality &amp; morning alertness</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
+        <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
+        <div class="card chart-card"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+      </div>
+
       <div class="card ask-ai">
         <h3 class="form-section">Ask an AI about your sleep</h3>
         <textarea id="aiQuestion" rows="2" placeholder="e.g. Why do I wake up so often, and what should I try first?"></textarea>
@@ -51,15 +61,6 @@
           <button type="button" class="btn ghost" id="aiDownload">Download JSON</button>
         </div>
         <p class="hint">Copies a ready-to-paste prompt (your question + diary data) to the clipboard. Dates are pseudonymized; your token and location are never included. Paste it into any AI chat.</p>
-      </div>
-
-      <div class="cards" id="summaryCards"></div>
-      <div class="chart-grid">
-        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
-        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
-        <div class="card chart-card"><h4>Quality &amp; morning alertness</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
-        <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
-        <div class="card chart-card"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
       </div>
     </section>
 
@@ -162,6 +163,7 @@
         <p class="hint" id="tempHint"></p>
 
         <label class="field"><span>Notes</span><textarea id="f-notes" rows="2" placeholder="Anything else worth noting"></textarea></label>
+        <p class="hint">Tip: if you plan to share notes with an AI, avoid sensitive or identifying details.</p>
 
         <div class="form-actions">
           <button type="button" class="btn ghost" id="btn-clear">Reset fields</button>
@@ -204,6 +206,11 @@
         <h3 class="form-section">AI prompt (context for “Ask an AI”)</h3>
         <p class="hint">This persona/goal text is sent at the top of the AI prompt. Edit it to focus the assistant on what you care about.</p>
         <label class="field"><span>Prompt</span><textarea id="f-ai-prompt" rows="4"></textarea></label>
+        <label class="field checkbox"><input type="checkbox" id="f-include-notes" /><span>Include notes in the AI export</span></label>
+
+        <h3 class="form-section">Mottos (rotate at the top of the page)</h3>
+        <p class="hint">One per line. Leave empty to hide the banner.</p>
+        <label class="field"><span>Mottos</span><textarea id="f-mottos" rows="3"></textarea></label>
 
         <h3 class="form-section">Experiment (track one factor)</h3>
         <label class="field checkbox"><input type="checkbox" id="f-exp-active" /><span>Experiment active</span></label>

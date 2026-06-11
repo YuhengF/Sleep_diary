@@ -41,6 +41,7 @@
   --maxw: 760px;
   --header-h: 56px;
   --tabbar-h: 60px;
+  --motto-h: 30px;
 }
 
 /* ---- Time-of-day themes (set via data-daypart on <html>) ---------------------

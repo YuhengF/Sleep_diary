@@ -39,7 +39,7 @@ function offsetDaysFor(earliestISO) {
   return Math.round((ps - real) / 86400000);
 }
 
-function cleanEntry(e, shift) {
+function cleanEntry(e, shift, includeNotes) {
   const out = {
     date: shift(e.date),
     alarmTime: e.alarmTime ?? null, wakeTime: e.wakeTime ?? null, outOfBedTime: e.outOfBedTime ?? null,
@@ -49,8 +49,9 @@ function cleanEntry(e, shift) {
     quality: e.quality ?? null, wakeEase: e.wakeEase ?? null, morningAlertness: e.morningAlertness ?? null,
     melatonin: e.melatonin || null, sunlight: e.sunlight || null, exercise: e.exercise || null,
     dinner: e.dinner || null, bedSnack: e.bedSnack || null, caffeine: e.caffeine || null,
-    bedroomTempC: e.bedroomTempC ?? null, notes: e.notes || '',
+    bedroomTempC: e.bedroomTempC ?? null,
   };
+  if (includeNotes) out.notes = e.notes || '';
   return out;
 }
 
@@ -67,13 +68,14 @@ export function buildPayload(question, settings) {
   const offset = allDates.length ? offsetDaysFor(allDates[0]) : 0;
   const shift = (iso) => addDays(iso, offset);
   const shiftDT = (dt) => new Date(Date.parse(dt) + offset * 86400000).toISOString();
+  const includeNotes = settings.includeNotes !== false;
 
   return {
     legend: LEGEND,
     question: question || '(Please give a general analysis and concrete suggestions.)',
     settings: { targetSleepMin: settings.defaults.targetTstMin, targetSleepMax: settings.defaults.targetTstMax, experiment: settings.experiment },
-    entries: entries.map((e) => cleanEntry(e, shift)),
-    checkins: checkins.map((c) => ({ datetime: shiftDT(c.datetime), level: c.level, note: c.note || null })),
+    entries: entries.map((e) => cleanEntry(e, shift, includeNotes)),
+    checkins: checkins.map((c) => ({ datetime: shiftDT(c.datetime), level: c.level, note: includeNotes ? (c.note || null) : null })),
   };
 }
 
