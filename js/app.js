@@ -364,6 +364,7 @@ function wire() {
   const recompute = debounce(ui.updateTstHint, 100);
   ['f-bedtime', 'f-onset', 'f-wake', 'f-alarm', 'f-waso', 'f-outofbed'].forEach((id) => on(id, 'input', recompute));
   ['f-bedtime', 'f-onset'].forEach((id) => on(id, 'input', ui.updateNightTimes));
+  ['f-nap-time', 'f-nap-min'].forEach((id) => on(id, 'input', ui.updateNapEnd));
   on('f-tst-override', 'change', ui.updateTstHint);
 
   // Alertness check-in modal.

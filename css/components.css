@@ -256,12 +256,19 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 /* ---- Responsive overrides (kept in this file, after the component base styles,
         so they win the cascade over the earlier-loaded layout.css) ---- */
 
-/* Calendar + check-ins side by side once there's room (tablet/desktop), equal height. */
+/* Calendar | nap | check-ins side by side once there's room (tablet/desktop). */
 @media (min-width: 700px) {
   .log-top { flex-direction: row; align-items: stretch; }
-  .log-top .log-controls { flex: 0 0 300px; margin-bottom: 0; }
+  .log-top .log-controls { flex: 0 0 290px; margin-bottom: 0; }
+  .log-top .nap-card { flex: 0 0 190px; }
   .log-top .checkins { flex: 1 1 auto; }
 }
+
+/* Native time/date inputs can over-size on mobile; let them shrink to the column. */
+input[type="time"], input[type="date"] { min-width: 0; box-sizing: border-box; }
+
+.nap-card { display: flex; flex-direction: column; gap: var(--s2); }
+.nap-card .form-section { margin: 0; }
 
 /* Phones: one field per row so adjacent inputs never crowd/overlap. */
 @media (max-width: 640px) {

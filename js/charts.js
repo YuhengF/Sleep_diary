@@ -50,6 +50,7 @@ function baseOptions(extra = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    indexAxis: extra.indexAxis,
     plugins: {
       legend: { labels: { color: AXIS, font: { size: 11 } } },
       tooltip: { intersect: false, mode: 'index' },
@@ -68,32 +69,46 @@ function noData(canvas) {
   ctx.fillText('Not enough data yet', canvas.width / 2, canvas.height / 2);
 }
 
-// Per-night timeline: floating bars from bedtime -> onset (latency) -> wake (asleep).
-// X axis is "minutes after 18:00" so evenings and past-midnight read left→right.
+// Per-night timeline: one horizontal row per night, tiled from bedtime → onset
+// (falling asleep) → final wake (asleep), plus the nap window (start → start+dur,
+// auto-computed). X axis is "minutes after 18:00" so evenings and past-midnight
+// read left→right; the daytime nap sits toward the right.
 export function renderTimeline(canvas, entries, settings) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
-  if (!entries.length) return noData(canvas);
   const ANCHOR = 18 * 60; // 18:00
   const norm = (hhmm) => {
-    let m = toMinutes(hhmm);
+    const m = toMinutes(hhmm);
     if (m == null) return null;
-    m -= ANCHOR;
-    if (m < 0) m += 1440;
-    return m;
+    let x = m - ANCHOR;
+    if (x < 0) x += 1440;
+    return x;
   };
-  const labels = entries.map((e) => e.date.slice(5));
+  const usable = entries.filter((e) => e.bedtime && (e.outOfBedTime || e.wakeTime || e.alarmTime));
+  if (!usable.length) return noData(canvas);
+
+  const labels = [];
   const latency = [];
   const asleep = [];
-  for (const e of entries) {
+  const nap = [];
+  for (const e of usable) {
     const bed = norm(e.bedtime);
-    const onset = norm(e.sleepOnset) ?? bed;
-    const wake = norm(e.outOfBedTime || e.wakeTime || e.alarmTime);
-    if (bed == null || wake == null) { latency.push(null); asleep.push(null); continue; }
-    const onsetAbs = onset < bed ? onset + 1440 : onset;
-    const wakeAbs = wake < bed ? wake + 1440 : wake;
+    let onset = norm(e.sleepOnset);
+    if (onset == null) onset = bed;
+    let wake = norm(e.outOfBedTime || e.wakeTime || e.alarmTime);
+    let onsetAbs = onset < bed ? onset + 1440 : onset;
+    let wakeAbs = wake < bed ? wake + 1440 : wake;
+    if (wakeAbs < onsetAbs) wakeAbs += 1440;
+    labels.push(e.date.slice(5));
     latency.push([bed, onsetAbs]);
     asleep.push([onsetAbs, wakeAbs]);
+    if (e.napTime && e.napMinutes) {
+      let ns = norm(e.napTime);
+      if (ns != null && ns < bed) ns += 1440;
+      nap.push(ns == null ? null : [ns, ns + e.napMinutes]);
+    } else {
+      nap.push(null);
+    }
   }
 
   registry.set(canvas.id, new Chart(canvas, {
@@ -101,15 +116,18 @@ export function renderTimeline(canvas, entries, settings) {
     data: {
       labels,
       datasets: [
-        { label: 'Falling asleep', data: latency, backgroundColor: 'rgba(129,140,248,0.55)', borderWidth: 0 },
-        { label: 'Asleep', data: asleep, backgroundColor: ACCENT, borderWidth: 0 },
+        { label: 'Falling asleep', data: latency, backgroundColor: 'rgba(129,140,248,0.6)', grouped: false, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9 },
+        { label: 'Asleep', data: asleep, backgroundColor: ACCENT, grouped: false, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9 },
+        { label: 'Nap', data: nap, backgroundColor: 'rgba(251,191,36,0.8)', grouped: false, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9 },
       ],
     },
     options: baseOptions({
+      indexAxis: 'y',
       plugins: {
         tooltip: {
           callbacks: {
             label: (c) => {
+              if (!c.raw) return '';
               const [a, b] = c.raw;
               return `${c.dataset.label}: ${toHHMM(a + ANCHOR)}–${toHHMM(b + ANCHOR)} (${fmtDuration(b - a)})`;
             },
@@ -118,21 +136,14 @@ export function renderTimeline(canvas, entries, settings) {
       },
       scales: {
         x: {
-          stacked: false,
           min: 0, max: 1440,
-          ticks: {
-            color: AXIS, stepSize: 120,
-            callback: (v) => toHHMM(v + ANCHOR),
-          },
+          ticks: { color: AXIS, stepSize: 120, callback: (v) => toHHMM(v + ANCHOR) },
           grid: { color: GRID },
         },
-        y: { stacked: true, ticks: { color: AXIS }, grid: { color: GRID } },
+        y: { ticks: { color: AXIS }, grid: { color: GRID } },
       },
     }),
   }));
-  // Horizontal bars.
-  registry.get(canvas.id).options.indexAxis = 'y';
-  registry.get(canvas.id).update();
 }
 
 // TST trend line with a shaded target band.

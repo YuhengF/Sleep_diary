@@ -3,7 +3,7 @@ import {
   MELATONIN_DOSES, MEAL_AMOUNTS, SNACK_AMOUNTS, SCALES, RATING_WORDS,
   RATING_MIN, RATING_MAX, RATING_DEFAULT, EXPERIMENT_FACTORS, EXPERIMENT_OUTCOMES,
 } from './config.js';
-import { toMinutes, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice, zonedTimeStr } from './util.js';
+import { toMinutes, toHHMM, durationMinutes, fmtDuration, todayISO, uuid, addDays, formatNice, zonedTimeStr } from './util.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -120,7 +120,9 @@ export function fillForm(entry, settings) {
   setRating('quality', e.quality ?? RATING_DEFAULT);
   setRating('wakeEase', e.wakeEase ?? RATING_DEFAULT);
   setRating('morningAlertness', e.morningAlertness ?? RATING_DEFAULT);
+  $('#f-nap-time').value = e.napTime || '';
   $('#f-nap-min').value = e.napMinutes ?? '';
+  updateNapEnd();
   $('#f-waso').value = e.waso ?? '';
   $('#f-bedtime').value = e.bedtime || '';
   $('#f-onset').value = e.sleepOnset || '';
@@ -168,6 +170,7 @@ export function readForm() {
     bedtime: $('#f-bedtime').value || null,
     sleepOnset: $('#f-onset').value || null,
     waso: num($('#f-waso').value),
+    napTime: $('#f-nap-time').value || null,
     napMinutes: num($('#f-nap-min').value),
     tstMinutes: tstManual ? num($('#f-tst').value) : null,
     tstSource: tstManual ? 'entered' : 'computed',
@@ -197,6 +200,15 @@ export function updateTstHint() {
   if (dur != null) dur = Math.max(0, dur - waso);
   $('#f-tst').value = dur != null ? dur : '';
   $('#tstHint').textContent = dur != null ? `(auto · ${fmtDuration(dur)})` : '(auto)';
+}
+
+// Live "nap ends at" from start + duration.
+export function updateNapEnd() {
+  const el = $('#napEnd');
+  if (!el) return;
+  const start = toMinutes($('#f-nap-time').value);
+  const dur = Number($('#f-nap-min').value) || 0;
+  el.textContent = (start != null && dur > 0) ? toHHMM(start + dur) : '—';
 }
 
 // Toggle the alarm field on/off (some days have no alarm).

@@ -98,10 +98,12 @@
 /* Wider desktop: use the horizontal space (esp. Summary) so there's less scrolling.
    The editor & settings stay a comfortable reading width; Summary spans full width. */
 @media (min-width: 1024px) {
-  :root { --maxw: 1160px; }
+  :root { --maxw: 1200px; }
   .chart-grid { grid-template-columns: repeat(3, 1fr); }
-  /* Editor & settings stay a comfortable reading width; Summary spans full width. */
-  #panel-log, #panel-settings { max-width: 860px; margin-inline: auto; }
+  /* The Log tab uses the full width (calendar | nap | check-ins); the form below
+     stays a comfortable reading width. Settings stays narrow too. */
+  #panel-settings { max-width: 860px; margin-inline: auto; }
+  #panel-log #logForm { max-width: 860px; }
 }
 
 /* Mobile header: avoid crowding the brand with the badge + sync chip. */

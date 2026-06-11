@@ -71,6 +71,12 @@
           <div class="calendar" id="calendar"></div>
           <input type="date" id="f-date" hidden />
         </div>
+        <div class="card nap-card">
+          <h3 class="form-section">Daytime nap</h3>
+          <label class="field"><span>Nap start</span><input type="time" id="f-nap-time" /></label>
+          <label class="field"><span>Nap duration (min)</span><input type="number" id="f-nap-min" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
+          <p class="hint">Ends at <span id="napEnd">—</span> (auto from start + duration).</p>
+        </div>
         <div class="card checkins">
           <div class="checkins-head">
             <h3 class="form-section" id="checkinTitle">Alertness check-ins</h3>
@@ -94,7 +100,7 @@
         <div class="form-row three">
           <label class="field"><span>Alarm</span><input type="time" id="f-alarm" /></label>
           <label class="field"><span>Wake time</span><input type="time" id="f-wake" /></label>
-          <label class="field"><span>Out of bed</span><input type="time" id="f-outofbed" /></label>
+          <label class="field"><span>Final get-up <small>(empty = wake)</small></span><input type="time" id="f-outofbed" /></label>
         </div>
         <label class="field checkbox"><input type="checkbox" id="f-no-alarm" /><span>No alarm this day (woke naturally)</span></label>
         <div class="rating" data-key="quality"></div>
@@ -105,8 +111,8 @@
           <label class="field"><span>Sunlight (min)</span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
         </div>
         <div class="form-row two">
-          <label class="field"><span>Daytime nap (min)</span><input type="number" id="f-nap-min" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
           <label class="field"><span>Awake during night · WASO (min)</span><input type="number" id="f-waso" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
+          <div class="field"><span>&nbsp;</span></div>
         </div>
 
         <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
