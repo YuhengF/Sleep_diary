@@ -573,21 +573,31 @@ export function startMottos(mottos) {
   if (list.length > 1) mottoTimer = setInterval(show, 12000);
 }
 
-// Tint the whole UI by time of day. Sets data-daypart on <html> (CSS does the rest).
-const DAYPART_META = {
-  morning: { color: '#0e0b07', icon: '🌅' },
-  day:     { color: '#0a0f18', icon: '☀️' },
-  evening: { color: '#0d0916', icon: '🌆' },
-  night:   { color: '#05070d', icon: '🌙' },
-};
+// Tint the whole UI by time of day. Morning (7–12) is the fixed orange; the
+// afternoon bright theme and the night dark theme each rotate across days.
+const BRIGHT_DAY = ['bright-sky', 'bright-mint', 'bright-rose'];
+const DARK_NIGHT = ['dark-teal', 'dark-violet', 'dark-blue', 'dark-amber'];
+
+function dayOfYear(d) {
+  return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+}
+
 export function setDaypartTheme(now = new Date()) {
   const h = now.getHours();
-  // Light (bright) from 7am; evening 20:00–24:00, night 00:00–07:00.
-  const part = h < 7 ? 'night' : h < 11 ? 'morning' : h < 20 ? 'day' : 'evening';
+  const i = dayOfYear(now);
+  let part, icon, name;
+  if (h >= 7 && h < 12) { part = 'morning'; icon = '🌅'; name = 'morning'; }
+  else if (h >= 12 && h < 20) { part = BRIGHT_DAY[i % BRIGHT_DAY.length]; icon = '☀️'; name = 'day'; }
+  else { part = DARK_NIGHT[i % DARK_NIGHT.length]; icon = '🌙'; name = 'night'; }
+
   document.documentElement.dataset.daypart = part;
+  // Match the mobile browser chrome to the active background.
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', DAYPART_META[part].color);
+  if (meta) {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (bg) meta.setAttribute('content', bg);
+  }
   const badge = $('#daypartBadge');
-  if (badge) badge.textContent = `${DAYPART_META[part].icon} ${part}`;
+  if (badge) badge.textContent = `${icon} ${name}`;
   return part;
 }

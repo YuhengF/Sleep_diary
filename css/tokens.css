@@ -45,37 +45,64 @@
 }
 
 /* ---- Time-of-day themes (set via data-daypart on <html>) ---------------------
-   Daytime (morning, day) = light themes; dusk and night = dark. Each daypart has
-   a distinct accent so the shift is obvious at a glance. */
+   Morning (7–12) is always the warm orange. Afternoon (12–20) rotates among the
+   BRIGHT (light) themes by day; night (20–7) rotates among the DARK themes. */
 :root[data-daypart="morning"] {
-  /* light, warm sunrise */
+  /* fixed: light, warm sunrise (orange) */
   --bg: #fbf4ea; --surface: #ffffff; --surface-2: #fcf5ec; --surface-3: #f3e6d4;
   --border: rgba(120,85,30,0.12); --border-strong: rgba(120,85,30,0.20);
   --text: #2c2117; --text-dim: #6c5a44; --text-faint: #9c8568;
   --accent: #d97706; --accent-2: #ea580c; --accent-ink: #ffffff;
   --shadow: 0 8px 24px rgba(120,80,20,0.10); --shadow-sm: 0 2px 8px rgba(120,80,20,0.08);
 }
-:root[data-daypart="day"] {
-  /* light, bright daylight */
+
+/* Bright (light) afternoon variants */
+:root[data-daypart="bright-sky"] {
   --bg: #eaf1f9; --surface: #ffffff; --surface-2: #f2f7fc; --surface-3: #e0e9f4;
   --border: rgba(20,45,85,0.10); --border-strong: rgba(20,45,85,0.18);
   --text: #13233b; --text-dim: #495a73; --text-faint: #7e92ac;
   --accent: #0284c7; --accent-2: #0891b2; --accent-ink: #ffffff;
   --shadow: 0 8px 24px rgba(20,45,85,0.10); --shadow-sm: 0 2px 8px rgba(20,45,85,0.08);
 }
-:root[data-daypart="evening"] {
-  /* dark dusk */
-  --bg: #0d0916; --surface: #160f24; --surface-2: #1e1531; --surface-3: #2a1f44;
-  --border: rgba(200,160,255,0.12); --border-strong: rgba(200,160,255,0.22);
-  --text: #e7ecf3; --text-dim: #b6a7cc; --text-faint: #7e6f96;
-  --accent: #a78bfa; --accent-2: #f472b6; --accent-ink: #1a1033;   /* violet + pink */
+:root[data-daypart="bright-mint"] {
+  --bg: #eafaf3; --surface: #ffffff; --surface-2: #f1fbf6; --surface-3: #ddf2e8;
+  --border: rgba(20,80,55,0.10); --border-strong: rgba(20,80,55,0.18);
+  --text: #123028; --text-dim: #44685a; --text-faint: #7ba093;
+  --accent: #0d9488; --accent-2: #10b981; --accent-ink: #ffffff;
+  --shadow: 0 8px 24px rgba(20,80,55,0.10); --shadow-sm: 0 2px 8px rgba(20,80,55,0.08);
 }
-:root[data-daypart="night"] {
-  /* deep dark night */
+:root[data-daypart="bright-rose"] {
+  --bg: #fdeef3; --surface: #ffffff; --surface-2: #fdf1f5; --surface-3: #f8dde6;
+  --border: rgba(120,30,60,0.10); --border-strong: rgba(120,30,60,0.18);
+  --text: #34121f; --text-dim: #6e4453; --text-faint: #a07f8b;
+  --accent: #db2777; --accent-2: #e11d48; --accent-ink: #ffffff;
+  --shadow: 0 8px 24px rgba(120,30,60,0.10); --shadow-sm: 0 2px 8px rgba(120,30,60,0.08);
+}
+
+/* Dark night variants */
+:root[data-daypart="dark-teal"] {
   --bg: #05070d; --surface: #0b0f1a; --surface-2: #111726; --surface-3: #182034;
   --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
   --text: #e7ecf3; --text-dim: #9aa6b8; --text-faint: #67748a;
-  --accent: #2dd4bf; --accent-2: #6366f1; --accent-ink: #04231f;   /* teal + indigo */
+  --accent: #2dd4bf; --accent-2: #6366f1; --accent-ink: #04231f;
+}
+:root[data-daypart="dark-violet"] {
+  --bg: #0d0916; --surface: #160f24; --surface-2: #1e1531; --surface-3: #2a1f44;
+  --border: rgba(200,160,255,0.12); --border-strong: rgba(200,160,255,0.22);
+  --text: #e7ecf3; --text-dim: #b6a7cc; --text-faint: #7e6f96;
+  --accent: #a78bfa; --accent-2: #f472b6; --accent-ink: #1a1033;
+}
+:root[data-daypart="dark-blue"] {
+  --bg: #060a14; --surface: #0c1322; --surface-2: #111c30; --surface-3: #18283f;
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
+  --text: #e7ecf3; --text-dim: #9aa6b8; --text-faint: #67748a;
+  --accent: #38bdf8; --accent-2: #3b82f6; --accent-ink: #04223a;
+}
+:root[data-daypart="dark-amber"] {
+  --bg: #0d0a05; --surface: #16110a; --surface-2: #1d1810; --surface-3: #271f12;
+  --border: rgba(255,220,150,0.08); --border-strong: rgba(255,220,150,0.16);
+  --text: #f0e9df; --text-dim: #b6a890; --text-faint: #897b62;
+  --accent: #f59e0b; --accent-2: #fbbf24; --accent-ink: #2a1c00;
 }
 
 /* Smoothly cross-fade when the daypart flips while the app is open. */
