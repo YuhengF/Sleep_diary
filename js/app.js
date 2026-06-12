@@ -102,7 +102,6 @@ function renderCalendar() {
     onPick: (date) => { setDate(date); },
     onPrev: () => { calMonth = shiftMonth(calMonth, -1); refreshMonthView(); },
     onNext: () => { calMonth = shiftMonth(calMonth, 1); refreshMonthView(); },
-    onToday: () => { calMonth = monthKeyOf(todayISO()); setDate(todayISO()); },
   });
 }
 

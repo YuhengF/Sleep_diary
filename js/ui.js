@@ -285,7 +285,6 @@ export function renderCalendar(container, monthKey, selectedDate, entries, wakeB
        <button type="button" class="btn ghost icon" data-cal="prev" aria-label="Previous month">‹</button>
        <div class="cal-title">${title}</div>
        <button type="button" class="btn ghost icon" data-cal="next" aria-label="Next month">›</button>
-       <button type="button" class="btn ghost small" data-cal="today">Today</button>
      </div>
      <div class="cal-dows">${DOW.map((d) => `<span class="cal-dow">${d}</span>`).join('')}</div>
      <div class="cal-grid">${cells}</div>
@@ -298,7 +297,6 @@ export function renderCalendar(container, monthKey, selectedDate, entries, wakeB
     if (!nav) return;
     if (nav.dataset.cal === 'prev') handlers.onPrev();
     else if (nav.dataset.cal === 'next') handlers.onNext();
-    else if (nav.dataset.cal === 'today') handlers.onToday();
   };
 }
 
