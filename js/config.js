@@ -65,6 +65,7 @@ export const DEFAULT_SETTINGS = {
   aiPrompt: DEFAULT_AI_PROMPT,
   includeNotes: true,
   napsInTotal: true, // show the "night + naps (24h)" line on the sleep trend
+  autoCheckin: true, // pop the quick check-in modal on every launch
   // Custom quick check-in trackers (besides built-in Alertness). Private: excluded
   // from the AI export. e.g. ["Mood", "Focus"].
   trackers: [],

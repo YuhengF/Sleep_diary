@@ -431,6 +431,8 @@ function init() {
   renderSummaryView();
   loadInitialLog();   // sets the date, then renders the calendar + check-ins
   updateStatusIdle();
+  // Fast path: pop the quick check-in on launch (toggle off in Settings).
+  if (settings.autoCheckin !== false) ui.openSleepModal(settings);
   backgroundSync(); // pull + flush if a token exists
   // Keep the theme in step with the clock (e.g. crossing into evening while open).
   setInterval(() => ui.setDaypartTheme(), 10 * 60 * 1000);

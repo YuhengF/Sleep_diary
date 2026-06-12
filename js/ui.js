@@ -416,6 +416,7 @@ export function fillSettings(settings, hasToken) {
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
   $('#f-naps-in-total').checked = settings.napsInTotal !== false;
   $('#f-trackers').value = (settings.trackers || []).join('\n');
+  $('#f-auto-checkin').checked = settings.autoCheckin !== false;
   const charts = settings.charts || {};
   $$('[data-chart]').forEach((cb) => { cb.checked = charts[cb.dataset.chart] !== false; });
   $('#f-loc-mode').value = settings.location.mode || 'geo';
@@ -441,6 +442,7 @@ export function readSettings(prev) {
     timezone: $('#f-timezone').value || 'America/Los_Angeles',
     napsInTotal: $('#f-naps-in-total').checked,
     trackers: $('#f-trackers').value.split('\n').map((s) => s.trim()).filter(Boolean),
+    autoCheckin: $('#f-auto-checkin').checked,
     charts: Object.fromEntries($$('[data-chart]').map((cb) => [cb.dataset.chart, cb.checked])),
     aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
     includeNotes: $('#f-include-notes').checked,
