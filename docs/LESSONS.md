@@ -71,6 +71,15 @@ health data here; only engineering and product lessons.
     with a user's custom tracker of the same letter. *Fix:* use a distinct short word for the
     built-in and keep custom labels verbatim.
 
+13. **A floating action button overlaps page-bottom buttons.** The fixed FAB (bottom-right, above
+    the bottom tab bar) sat on top of the last form buttons (Save/Reset) when scrolled to the end.
+    *Fix:* give the scroll container enough `padding-bottom` (tab-bar height + FAB height + margin)
+    so the last content clears the FAB. *Lesson:* reserve bottom space for any fixed FAB/tab bar.
+
+14. **Chart pan/zoom fights mobile scroll + taps.** Single-finger drag-pan captured touch, blocking
+    page scroll and tap-to-show-point. *Fix:* on touch (`pointer: coarse`) disable drag-pan and keep
+    pinch-zoom; x-axis only; double-tap resets. *Lesson:* on touch, never enable single-finger pan.
+
 ## Environment / ops gotchas (not app bugs)
 - Sandbox **network is allowlisted** — couldn't fetch a CDN to compute an SRI hash; don't
   ship a guessed `integrity=` (a wrong hash blocks the script). The live browser is fine.

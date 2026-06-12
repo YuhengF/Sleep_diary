@@ -431,7 +431,8 @@ function init() {
   renderSummaryView();
   loadInitialLog();   // sets the date, then renders the calendar + check-ins
   updateStatusIdle();
-  // Fast path: pop the quick check-in on launch (toggle off in Settings).
+  // Fast path: pop the quick check-in immediately when the app opens (e.g. via a
+  // phone shortcut), so logging is one step. Toggle off in Settings.
   if (settings.autoCheckin !== false) ui.openSleepModal(settings);
   backgroundSync(); // pull + flush if a token exists
   // Keep the theme in step with the clock (e.g. crossing into evening while open).
