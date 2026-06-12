@@ -75,8 +75,11 @@
   position: relative;
 }
 .tab-btn.active { color: var(--accent); }
+/* Indicator at the TOP edge of the active tab: on mobile, Chrome's collapsing
+   toolbar resizes the bottom bar, and a bottom-anchored line overlapped the
+   label — a top-anchored line never does. */
 .tab-btn.active::after {
-  content: ""; position: absolute; bottom: 8px; width: 24px; height: 3px;
+  content: ""; position: absolute; top: 0; width: 24px; height: 3px;
   background: var(--accent); border-radius: var(--r-pill);
 }
 
@@ -88,9 +91,11 @@
     top: calc(var(--motto-h) + var(--header-h)); bottom: auto; height: 48px;
     max-width: var(--maxw); margin: 0 auto; left: 0; right: 0;
     border-top: none; border-bottom: 1px solid var(--border);
-    background: transparent; backdrop-filter: none;
+    /* Opaque (not transparent): otherwise content scrolls visibly under the bar
+       and stays clickable through it. */
+    background: var(--bg);
   }
-  .tab-btn.active::after { bottom: 4px; }
+  .tab-btn.active::after { top: auto; bottom: 0; }
   .app-main { padding-top: calc(48px + var(--s4)); padding-bottom: var(--s7); }
   .chart-grid { grid-template-columns: 1fr 1fr; }
 }

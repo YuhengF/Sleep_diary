@@ -369,7 +369,7 @@ export function renderCheckins(dateStr, logs, tz, handlers) {
     host.innerHTML = logs.map((l) => {
       const time = zonedTimeStr(l.datetime, tz);
       const type = l.type || 'alertness';
-      const tag = type === 'alertness' ? 'A' : type;
+      const tag = type === 'alertness' ? 'alert' : type;
       return `<div class="checkin-row" data-id="${l.id}" style="--rate-color:${ratingColor(l.level)}">
         <span class="checkin-type" title="${type}">${tag}</span>
         <input type="time" class="checkin-time" value="${time}" data-edit="time" aria-label="Check-in time" />

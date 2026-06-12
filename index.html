@@ -39,10 +39,12 @@
       <div class="exp-banner" id="expBanner" hidden></div>
       <div class="summary-head">
         <h2 class="panel-title">Overview</h2>
-        <button type="button" class="info-btn" id="commentsToggle" aria-expanded="false"
-                title="What the diary suggests">?</button>
+        <div class="info-wrap">
+          <button type="button" class="info-btn" id="commentsToggle" aria-expanded="false"
+                  title="What the diary suggests">?</button>
+          <div class="card comments popover" id="summaryComments" hidden></div>
+        </div>
       </div>
-      <div class="card comments" id="summaryComments" hidden></div>
 
       <div class="cards" id="summaryCards"></div>
       <div class="chart-grid">

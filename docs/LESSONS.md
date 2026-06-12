@@ -55,6 +55,22 @@ health data here; only engineering and product lessons.
    **date-driven** editor (calendar selects the day → loads that entry or a blank). Merging
    the separate "History" tab into the calendar removed the confusion.
 
+10. **Fixed nav bars across mobile/desktop are fiddly.** Two distinct bugs from one shared bar:
+    (a) **Mobile bottom bar** — Chrome's collapsing URL toolbar resizes the visual viewport, so
+    a `bottom`-anchored active-tab indicator overlapped the label. *Fix:* anchor the indicator
+    to the **top edge** of the tab. (b) **Desktop top bar** — a **transparent** fixed bar let
+    page content scroll **visibly under it and stay clickable through** it. *Fix:* give the bar
+    an **opaque background** so it occludes and captures clicks. *Lesson:* fixed bars need a
+    solid/opaque background and viewport-resize-safe indicator placement.
+
+11. **Popovers should overlay, not reflow.** A help panel that toggles in the document flow
+    shoves the page around. *Fix:* anchor it `position: absolute` to its trigger (hover +
+    `:focus-within`, plus a click toggle to pin for touch) so it overlays without moving content.
+
+12. **Ambiguous one-letter tags collide.** A built-in tag abbreviated to a single letter clashed
+    with a user's custom tracker of the same letter. *Fix:* use a distinct short word for the
+    built-in and keep custom labels verbatim.
+
 ## Environment / ops gotchas (not app bugs)
 - Sandbox **network is allowlisted** — couldn't fetch a CDN to compute an SRI hash; don't
   ship a guessed `integrity=` (a wrong hash blocks the script). The live browser is fine.

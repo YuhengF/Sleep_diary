@@ -112,7 +112,13 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .stat.bad .stat-value { color: var(--bad); }
 .card.empty { color: var(--text-dim); text-align: center; padding: var(--s6) var(--s4); }
 
-.comments { margin-top: var(--s4); }
+/* "What the diary suggests" is a hover/tap popover anchored to the ? button. */
+.info-wrap { position: relative; }
+.comments.popover {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; margin: 0;
+  width: min(340px, 86vw); max-height: 60vh; overflow: auto; box-shadow: var(--shadow);
+}
+.info-wrap:hover .comments.popover, .info-wrap:focus-within .comments.popover { display: block; }
 .comments h4 { margin-bottom: var(--s2); font-size: 14px; }
 .comments ul { list-style: none; display: flex; flex-direction: column; gap: var(--s2); }
 .comments li { position: relative; padding-left: var(--s4); font-size: 14px; color: var(--text-dim); }
@@ -201,8 +207,10 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
   padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2);
 }
 .checkin-type {
-  font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--rate-color, var(--accent));
-  border-radius: var(--r-sm); padding: 2px 6px; min-width: 20px; text-align: center;
+  font-size: 9px; font-weight: 700; text-transform: lowercase; letter-spacing: 0.2px;
+  color: var(--accent-ink); background: var(--rate-color, var(--accent));
+  border-radius: var(--r-sm); padding: 2px 5px; max-width: 56px; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .checkin-row input[type="time"] { min-height: 36px; padding: 4px 6px; width: auto; }
 .checkin-row input[type="range"] { height: 24px; }
