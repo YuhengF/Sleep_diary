@@ -226,7 +226,7 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 }
 .cal-day .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
 .cal-day.has-entry { font-weight: 700; }
-.cal-day.today { outline: 2px solid var(--accent-2); outline-offset: -2px; }
+.cal-day.today { outline: 2px solid var(--ring); outline-offset: -2px; }
 .cal-day.selected { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
 .cal-legend { font-size: 10px; color: var(--text-faint); margin-top: 2px; text-align: center; }
 

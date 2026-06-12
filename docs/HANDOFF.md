@@ -107,6 +107,15 @@ Pure modules (`stats.js`, `util.js`, `ai-export.js` helpers) can be exercised un
 ## Conventions
 - Do **not** add AI/assistant as a git contributor, committer, author, or co-author.
 - Keep all wording generic; never commit real entries, tokens, coordinates, or health detail.
+- **Place new fields by natural time of occurrence.** Add a new factor to the half it
+  belongs to (evening/night vs morning) and, within that half, in chronological order
+  (e.g. dinner → bedtime; wake → ratings → morning routine). If a field's timing is
+  unclear, ask the user where it fits rather than guessing.
+- **Per-theme color contrast.** Each theme defines its palette (`--bg`, `--accent`, …)
+  plus utility colors. Keep utility/marker colors (e.g. `--ring` for the calendar "today"
+  outline, and the fixed `--good/--warn/--bad`) **visually distinct from `--accent`** in
+  every theme, so local cues stay readable without fighting the theme's main color. When
+  adding a theme, set `--ring` to a hue that contrasts its accent.
 
 ## Possible next steps
 - SRI hash for the pinned Chart.js; split custom-tracker chart into per-tracker mini-plots.
