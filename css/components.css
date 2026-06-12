@@ -187,6 +187,22 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .mode-pick.active { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .mode-pick.active small { color: var(--accent-ink); opacity: 0.85; }
 
+/* Half-form: a quick pick shows only its half; calendar (full mode) shows both. */
+.form-half { display: flex; flex-direction: column; gap: var(--s3); }
+#logForm[data-mode="morning"] .form-half[data-half="evening"],
+#logForm[data-mode="evening"] .form-half[data-half="morning"] { display: none; }
+.full-toggle {
+  align-self: flex-start; background: transparent; border: 1px dashed var(--border-strong);
+  color: var(--text-dim); border-radius: var(--r-pill); padding: 5px 12px; font-size: 12px; font-weight: 600;
+}
+.full-toggle[hidden] { display: none; }
+/* Calendar selection: filled when a quick pick (half), ringed when an explicit
+   full-entry pick — so the two ways of opening a day look different. */
+#calendar[data-mode="full"] .cal-day.selected {
+  background: var(--surface-2); color: var(--text);
+  outline: 2px solid var(--accent); outline-offset: -2px; border-color: transparent;
+}
+
 /* ---- Log top: calendar + check-ins (stacked on mobile, side-by-side on desktop) ---- */
 .log-top { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s3); }
 

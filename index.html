@@ -105,81 +105,85 @@
             exercise, melatonin, bedtime) belong to the <strong>night before</strong>.
           </p>
         </div>
-        <h3 class="form-section" id="sec-morning">☀️ This morning</h3>
-        <div class="form-row three">
-          <label class="field"><span>Alarm</span><input type="time" id="f-alarm" /></label>
-          <label class="field"><span>Wake time</span><input type="time" id="f-wake" /></label>
-          <label class="field"><span>Sleep ends <small>(if you fell back asleep; empty = wake)</small></span><input type="time" id="f-outofbed" /></label>
-        </div>
-        <label class="field checkbox"><input type="checkbox" id="f-no-alarm" /><span>No alarm this day (woke naturally)</span></label>
-        <div class="rating" data-key="quality"></div>
-        <div class="rating" data-key="wakeEase"></div>
-        <div class="rating" data-key="morningAlertness"></div>
-        <div class="form-row two">
-          <label class="field"><span>Morning sunlight time</span><input type="time" id="f-sunlight-time" /></label>
-          <label class="field"><span>Morning sunlight (min) <small>(to wake)</small></span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
-        </div>
-        <div class="form-row two">
-          <label class="field"><span>Total sunlight today (min)</span><input type="number" id="f-sunlight-total" min="0" step="5" inputmode="numeric" /></label>
-          <div class="field"><span>&nbsp;</span></div>
-        </div>
-        <div class="form-row two">
-          <label class="field"><span>Awake during night · WASO (min)</span><input type="number" id="f-waso" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
-          <div class="field"><span>&nbsp;</span></div>
+        <button type="button" class="full-toggle" id="fullToggle" hidden>Show whole entry ▾</button>
+
+        <div class="form-half" data-half="morning">
+          <h3 class="form-section" id="sec-morning">☀️ This morning</h3>
+          <div class="form-row three">
+            <label class="field"><span>Alarm</span><input type="time" id="f-alarm" /></label>
+            <label class="field"><span>Wake time</span><input type="time" id="f-wake" /></label>
+            <label class="field"><span>Sleep ends <small>(if you fell back asleep; empty = wake)</small></span><input type="time" id="f-outofbed" /></label>
+          </div>
+          <label class="field checkbox"><input type="checkbox" id="f-no-alarm" /><span>No alarm this day (woke naturally)</span></label>
+          <div class="rating" data-key="quality"></div>
+          <div class="rating" data-key="wakeEase"></div>
+          <div class="rating" data-key="morningAlertness"></div>
+          <div class="form-row two">
+            <label class="field"><span>Morning sunlight time</span><input type="time" id="f-sunlight-time" /></label>
+            <label class="field"><span>Morning sunlight (min) <small>(to wake)</small></span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
+          </div>
+          <div class="form-row two">
+            <label class="field"><span>Awake during night · WASO (min)</span><input type="number" id="f-waso" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
+            <div class="field"><span>&nbsp;</span></div>
+          </div>
+          <h3 class="form-section">Sleep totals</h3>
+          <div class="form-row two">
+            <label class="field tst-field">
+              <span>Total sleep <small id="tstHint">(auto)</small></span>
+              <input type="text" id="f-tst" inputmode="numeric" placeholder="auto" readonly />
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" id="f-tst-override" />
+              <span>Enter manually</span>
+            </label>
+          </div>
         </div>
 
-        <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
-        <div class="form-row two">
-          <label class="field"><span>Bedtime <small class="field-day" id="bedtimeDay"></small></span><input type="time" id="f-bedtime" /></label>
-          <label class="field"><span>Last attempt to sleep <small class="field-day" id="onsetDay"></small></span><input type="time" id="f-onset" /></label>
-        </div>
-        <div class="form-row two">
-          <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
-          <div class="field">
-            <span>Dinner amount</span>
-            <div class="segmented" id="seg-dinner" data-name="dinner"></div>
+        <div class="form-half" data-half="evening">
+          <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
+          <div class="form-row two">
+            <label class="field"><span>Bedtime <small class="field-day" id="bedtimeDay"></small></span><input type="time" id="f-bedtime" /></label>
+            <label class="field"><span>Last attempt to sleep <small class="field-day" id="onsetDay"></small></span><input type="time" id="f-onset" /></label>
           </div>
-        </div>
-        <div class="form-row two">
-          <div class="field">
-            <span>Before-bed snack</span>
-            <div class="segmented" id="seg-snack" data-name="snack"></div>
+          <div class="form-row two">
+            <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
+            <div class="field">
+              <span>Dinner amount</span>
+              <div class="segmented" id="seg-dinner" data-name="dinner"></div>
+            </div>
           </div>
-          <label class="field"><span>Caffeine time</span><input type="time" id="f-caffeine-time" /></label>
-        </div>
-        <div class="form-row two">
-          <label class="field"><span>Exercise start</span><input type="time" id="f-exercise-start" /></label>
-          <label class="field"><span>Exercise (min)</span><input type="number" id="f-exercise-dur" min="0" step="5" inputmode="numeric" /></label>
-        </div>
-        <div class="form-row two">
-          <div class="field">
-            <span>Melatonin dose (mg)</span>
-            <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
+          <div class="form-row two">
+            <div class="field">
+              <span>Before-bed snack</span>
+              <div class="segmented" id="seg-snack" data-name="snack"></div>
+            </div>
+            <label class="field"><span>Caffeine time</span><input type="time" id="f-caffeine-time" /></label>
           </div>
-          <label class="field"><span>Melatonin time</span><input type="time" id="f-melatonin-time" /></label>
-        </div>
-
-        <h3 class="form-section">Sleep totals</h3>
-        <div class="form-row two">
-          <label class="field tst-field">
-            <span>Total sleep <small id="tstHint">(auto)</small></span>
-            <input type="text" id="f-tst" inputmode="numeric" placeholder="auto" readonly />
-          </label>
-          <label class="field checkbox">
-            <input type="checkbox" id="f-tst-override" />
-            <span>Enter manually</span>
-          </label>
-        </div>
-
-        <h3 class="form-section">Environment</h3>
-        <div class="form-row two">
-          <label class="field"><span>Bedroom temp (°C)</span><input type="number" id="f-temp" step="0.1" inputmode="decimal" placeholder="auto" /></label>
-          <div class="field">
-            <span>&nbsp;</span>
-            <button type="button" class="btn ghost" id="btn-temp">⟳ Auto temperature</button>
+          <div class="form-row two">
+            <label class="field"><span>Exercise start</span><input type="time" id="f-exercise-start" /></label>
+            <label class="field"><span>Exercise (min)</span><input type="number" id="f-exercise-dur" min="0" step="5" inputmode="numeric" /></label>
           </div>
+          <div class="form-row two">
+            <div class="field">
+              <span>Melatonin dose (mg)</span>
+              <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
+            </div>
+            <label class="field"><span>Melatonin time</span><input type="time" id="f-melatonin-time" /></label>
+          </div>
+          <div class="form-row two">
+            <label class="field"><span>Total sunlight today (min)</span><input type="number" id="f-sunlight-total" min="0" step="5" inputmode="numeric" /></label>
+            <div class="field"><span>&nbsp;</span></div>
+          </div>
+          <h3 class="form-section">Environment</h3>
+          <div class="form-row two">
+            <label class="field"><span>Bedroom temp (°C)</span><input type="number" id="f-temp" step="0.1" inputmode="decimal" placeholder="auto" /></label>
+            <div class="field">
+              <span>&nbsp;</span>
+              <button type="button" class="btn ghost" id="btn-temp">⟳ Auto temperature</button>
+            </div>
+          </div>
+          <p class="hint" id="tempHint"></p>
         </div>
-        <p class="hint" id="tempHint"></p>
 
         <label class="field"><span>Notes</span><textarea id="f-notes" rows="2" placeholder="Anything else worth noting"></textarea></label>
         <p class="hint">Tip: if you plan to share notes with an AI, avoid sensitive or identifying details.</p>

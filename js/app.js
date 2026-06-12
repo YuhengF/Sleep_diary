@@ -99,10 +99,12 @@ function renderCalendar() {
   }
 
   ui.renderCalendar(document.getElementById('calendar'), calMonth, selected, entries, wakeByDate, {
-    onPick: (date) => { setDate(date); },
+    onPick: (date) => { setDate(date, 'full'); }, // explicit pick → full entry
     onPrev: () => { calMonth = shiftMonth(calMonth, -1); refreshMonthView(); },
     onNext: () => { calMonth = shiftMonth(calMonth, 1); refreshMonthView(); },
   });
+  const calEl = document.getElementById('calendar');
+  if (calEl) calEl.dataset.mode = logMode; // preserve selection style across re-renders
 }
 
 // Editable alertness check-ins for the selected day (times shown in the user's tz).
@@ -165,52 +167,53 @@ function loadDate(date) {
   return !!e;
 }
 
-// Select a date everywhere: form + calendar highlight + that day's check-ins.
-function setDate(date) {
+// View mode: 'morning' / 'evening' show one half of the form (quick picks);
+// 'full' shows the whole entry (explicit calendar pick).
+let logMode = 'full';
+const EVENING_FROM = 18; // 6pm
+
+// Select a date everywhere: form + calendar + that day's check-ins, in `mode`.
+function setDate(date, mode = 'full') {
+  logMode = mode;
   document.getElementById('f-date').value = date;
   calMonth = monthKeyOf(date);
   loadDate(date);
   renderCalendar();
   renderCheckins();
-  updateLogMode();
+  applyLogMode();
 }
 
-// The wake-up date the user is most likely logging right now: this morning during
-// the day, or tonight's (tomorrow's wake) in the evening — so evening logging
-// targets the correct future entry instead of overwriting today's finished one.
-const EVENING_FROM = 18; // 6pm
+// The date/half the user is most likely logging now: this morning during the day,
+// tonight's (tomorrow's wake) in the evening — so evening logging targets the
+// future entry instead of overwriting today's finished one.
 function defaultLogDate() {
   return new Date().getHours() < EVENING_FROM ? todayISO() : addDays(todayISO(), 1);
 }
+function defaultLogMode() {
+  return new Date().getHours() < EVENING_FROM ? 'morning' : 'evening';
+}
 
-// Highlight which quick-pick (This morning / Tonight) matches the selected date,
-// and show the resolved wake date on each.
-function updateLogMode() {
-  const date = document.getElementById('f-date').value;
+// Reflect the mode: form-half visibility, calendar selection style, quick-pick
+// highlight, and the "show whole entry" toggle.
+function applyLogMode() {
+  const form = document.getElementById('logForm');
+  const cal = document.getElementById('calendar');
+  if (form) form.dataset.mode = logMode;
+  if (cal) cal.dataset.mode = logMode;
+  const ft = document.getElementById('fullToggle');
+  if (ft) ft.hidden = logMode === 'full';
   const today = todayISO();
   const tomorrow = addDays(today, 1);
   const bm = document.getElementById('btn-this-morning');
   const bt = document.getElementById('btn-tonight');
-  if (bm) {
-    bm.innerHTML = `☀️ This morning<small>${formatNice(today)}</small>`;
-    bm.classList.toggle('active', date === today);
-  }
-  if (bt) {
-    bt.innerHTML = `🌙 Tonight<small>wake ${formatNice(tomorrow)}</small>`;
-    bt.classList.toggle('active', date === tomorrow);
-  }
-}
-
-// Most recent logged date across cached months, or null.
-function newestEntryDate() {
-  const entries = allEntries();
-  return entries.length ? entries[entries.length - 1].date : null;
+  if (bm) { bm.innerHTML = `☀️ This morning<small>${formatNice(today)}</small>`; bm.classList.toggle('active', logMode === 'morning'); }
+  if (bt) { bt.innerHTML = `🌙 Tonight<small>wake ${formatNice(tomorrow)}</small>`; bt.classList.toggle('active', logMode === 'evening'); }
 }
 
 // On open: default to the entry the user is most likely logging now (this morning
 // during the day, tonight's wake in the evening).
 function loadInitialLog() {
-  setDate(defaultLogDate());
+  setDate(defaultLogDate(), defaultLogMode());
 }
 
 // Tap a recent entry → load it and bring the form into view.
@@ -408,9 +411,10 @@ function wire() {
   ui.fillSettings(settings, sync.hasToken());
 
   on('logForm', 'submit', onSave);
-  // Intent-based date picks so users never log tonight into today's finished entry.
-  on('btn-this-morning', 'click', () => setDate(todayISO()));
-  on('btn-tonight', 'click', () => setDate(addDays(todayISO(), 1)));
+  // Intent-based picks: each shows only its half so the wrong half can't be filled.
+  on('btn-this-morning', 'click', () => setDate(todayISO(), 'morning'));
+  on('btn-tonight', 'click', () => setDate(addDays(todayISO(), 1), 'evening'));
+  on('fullToggle', 'click', () => { logMode = 'full'; applyLogMode(); });
   // Reset discards unsaved edits: reload the saved entry, or blank if it's a new date.
   on('btn-clear', 'click', () => loadDate(document.getElementById('f-date').value));
   on('btn-temp', 'click', onAutoTemp);
