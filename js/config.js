@@ -66,7 +66,7 @@ export const DEFAULT_SETTINGS = {
   includeNotes: true,
   napsInTotal: true, // show the "night + naps (24h)" line on the sleep trend
   // Custom quick check-in trackers (besides built-in Alertness). Private: excluded
-  // from the AI export. e.g. ["D", "A"].
+  // from the AI export. e.g. ["Mood", "Focus"].
   trackers: [],
   // Which summary charts are shown.
   charts: { timeline: true, tst: true, quality: true, scatter: true, alertness: true, exercise: true, trackers: true },
