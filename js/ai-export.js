@@ -26,7 +26,7 @@ const LEGEND = {
     napMinutes: 'daytime nap minutes', tstMinutes: 'manual total-sleep min, else null=computed',
     quality: '1–10', wakeEase: '1–10', morningAlertness: '1–10 (~1h after waking)',
     'melatonin.doseMg': 'mg (0=none)', 'melatonin.time': 'HH:MM',
-    'sunlight.minutes': 'morning light min', 'exercise.durationMin': 'min',
+    'sunlight.minutes': 'morning light min (to wake)', 'sunlight.totalMinutes': 'total daily sunlight min', 'exercise.durationMin': 'min',
     'dinner.amount': 'small|medium|big', 'bedSnack.amount': 'none|small|medium|big',
     'caffeine.time': 'HH:MM', bedroomTempC: '°C', notes: 'free text',
     checkins: '{ time, level } daytime alertness check-ins (level 1–10, higher=more alert)',

@@ -138,6 +138,7 @@ export function fillForm(entry, settings) {
   $('#f-melatonin-time').value = e.melatonin?.time || '';
   $('#f-sunlight-time').value = e.sunlight?.time || '';
   $('#f-sunlight-min').value = e.sunlight?.minutes ?? '';
+  $('#f-sunlight-total').value = e.sunlight?.totalMinutes ?? '';
   $('#f-exercise-start').value = e.exercise?.startTime || '';
   $('#f-exercise-dur').value = e.exercise?.durationMin ?? '';
   $('#f-dinner-time').value = e.dinner?.time || '';
@@ -175,7 +176,7 @@ export function readForm() {
     tstMinutes: tstManual ? num($('#f-tst').value) : null,
     tstSource: tstManual ? 'entered' : 'computed',
     melatonin: { doseMg: isNaN(dose) ? 0 : dose, time: $('#f-melatonin-time').value || null },
-    sunlight: { time: $('#f-sunlight-time').value || null, minutes: num($('#f-sunlight-min').value) },
+    sunlight: { time: $('#f-sunlight-time').value || null, minutes: num($('#f-sunlight-min').value), totalMinutes: num($('#f-sunlight-total').value) },
     exercise: { startTime: $('#f-exercise-start').value || null, durationMin: num($('#f-exercise-dur').value) },
     dinner: { time: $('#f-dinner-time').value || null, amount: getSegment('seg-dinner') || null },
     bedSnack: { amount: getSegment('seg-snack') || 'none' },

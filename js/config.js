@@ -85,6 +85,7 @@ export const DEFAULT_SETTINGS = {
 export const EXPERIMENT_FACTORS = [
   { path: 'melatonin.doseMg', label: 'Melatonin dose' },
   { path: 'sunlight.minutes', label: 'Morning sunlight (min)' },
+  { path: 'sunlight.totalMinutes', label: 'Total sunlight (min)' },
   { path: 'exercise.durationMin', label: 'Exercise duration (min)' },
   { path: 'bedroomTempC', label: 'Bedroom temperature' },
   { path: 'caffeine.time', label: 'Caffeine timing' },
