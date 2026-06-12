@@ -188,10 +188,11 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
   border-radius: var(--r-sm); font-size: 13px; font-variant-numeric: tabular-nums;
 }
-.cal-day .cal-dot {
+.cal-day .cal-dots {
   position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
-  width: 6px; height: 6px; border-radius: 50%; background: transparent;
+  display: flex; gap: 2px;
 }
+.cal-day .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
 .cal-day.has-entry { font-weight: 700; }
 .cal-day.today { outline: 2px solid var(--accent-2); outline-offset: -2px; }
 .cal-day.selected { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 700; }

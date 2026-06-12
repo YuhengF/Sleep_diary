@@ -81,12 +81,24 @@ function shiftMonth(monthKey, delta) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Render the calendar for calMonth; dots are colored by each night's quality.
+// Render the calendar for calMonth; two dots per day = quality + morning wakefulness.
 function renderCalendar() {
   const month = store.getMonth(calMonth);
   const entries = month ? month.entries : {};
   const selected = document.getElementById('f-date').value;
-  ui.renderCalendar(document.getElementById('calendar'), calMonth, selected, entries, {
+  const tz = settings.timezone || 'America/Los_Angeles';
+
+  // Morning wakefulness per day: the entry's morningAlertness, else that day's
+  // earliest alertness check-in.
+  const alertLogs = store.listSleepiness(store.cachedMonthKeys()).filter((c) => (c.type || 'alertness') === 'alertness');
+  const wakeByDate = {};
+  for (const [date, e] of Object.entries(entries)) {
+    if (e.morningAlertness != null) { wakeByDate[date] = e.morningAlertness; continue; }
+    const dayLogs = alertLogs.filter((c) => zonedDateStr(c.datetime, tz) === date).sort((a, b) => (a.datetime < b.datetime ? -1 : 1));
+    if (dayLogs.length) wakeByDate[date] = dayLogs[0].level;
+  }
+
+  ui.renderCalendar(document.getElementById('calendar'), calMonth, selected, entries, wakeByDate, {
     onPick: (date) => { setDate(date); },
     onPrev: () => { calMonth = shiftMonth(calMonth, -1); refreshMonthView(); },
     onNext: () => { calMonth = shiftMonth(calMonth, 1); refreshMonthView(); },

@@ -255,7 +255,7 @@ export function updateNightTimes() {
 // tap a day to load it. Navigation + selection are driven by `handlers`.
 // `entries` is a date→entry map for the displayed month.
 const DOW = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-export function renderCalendar(container, monthKey, selectedDate, entries, handlers) {
+export function renderCalendar(container, monthKey, selectedDate, entries, wakeByDate, handlers) {
   if (!container) return;
   const [y, m] = monthKey.split('-').map(Number);
   const first = new Date(y, m - 1, 1);
@@ -263,6 +263,7 @@ export function renderCalendar(container, monthKey, selectedDate, entries, handl
   const daysInMonth = new Date(y, m, 0).getDate();
   const today = todayISO();
   const title = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const dot = (v) => (v == null ? '' : `<span class="cal-dot" style="background:${ratingColor(v)}"></span>`);
 
   let cells = '';
   for (let i = 0; i < startDow; i++) cells += '<span class="cal-cell empty"></span>';
@@ -273,8 +274,9 @@ export function renderCalendar(container, monthKey, selectedDate, entries, handl
     if (entry) cls.push('has-entry');
     if (iso === selectedDate) cls.push('selected');
     if (iso === today) cls.push('today');
-    const dotStyle = entry ? ` style="background:${ratingColor(entry.quality)}"` : '';
-    cells += `<button type="button" class="${cls.join(' ')}" data-date="${iso}">${d}<span class="cal-dot"${dotStyle}></span></button>`;
+    // Dot 1 = sleep quality; dot 2 = morning wakefulness.
+    const dots = entry ? `<span class="cal-dots">${dot(entry.quality)}${dot((wakeByDate || {})[iso])}</span>` : '';
+    cells += `<button type="button" class="${cls.join(' ')}" data-date="${iso}">${d}${dots}</button>`;
   }
 
   container.innerHTML =
@@ -286,7 +288,7 @@ export function renderCalendar(container, monthKey, selectedDate, entries, handl
      </div>
      <div class="cal-dows">${DOW.map((d) => `<span class="cal-dow">${d}</span>`).join('')}</div>
      <div class="cal-grid">${cells}</div>
-     <div class="cal-legend">dot = logged night, colored by quality (red→green)</div>`;
+     <div class="cal-legend">dots: sleep quality · morning wakefulness (red→green)</div>`;
 
   container.onclick = (e) => {
     const day = e.target.closest('[data-date]');
