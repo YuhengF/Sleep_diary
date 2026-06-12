@@ -151,8 +151,16 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .exp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); animation: pulse 1.4s infinite; }
 
 /* ---- Charts ---- */
+.chart-card { position: relative; }
 .chart-card h4 { font-size: 13px; color: var(--text-dim); margin-bottom: var(--s2); }
-.chart-wrap { position: relative; height: 240px; }
+.chart-wrap { position: relative; height: 240px; touch-action: pan-y; } /* let the page scroll over charts on touch */
+.chart-zoom { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; }
+.chart-zoom button {
+  width: 28px; height: 28px; border-radius: var(--r-sm); line-height: 1;
+  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-dim);
+  font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.chart-zoom button:active { background: var(--surface-3); }
 
 /* ---- Log controls (date nav + mode) ---- */
 .log-controls { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s3); }

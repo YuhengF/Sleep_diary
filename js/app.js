@@ -412,7 +412,30 @@ function wire() {
     if (e.detail === 'log') { renderCalendar(); renderCheckins(); }
   });
 
-  // Double-click any chart to reset its zoom/pan.
+  // On-chart −/+/reset buttons (reliable zoom on touch, no gesture hijacking).
+  document.querySelectorAll('.chart-card').forEach((card) => {
+    const canvas = card.querySelector('canvas');
+    if (!canvas) return;
+    const ctrl = document.createElement('div');
+    ctrl.className = 'chart-zoom';
+    ctrl.innerHTML = '<button type="button" data-zc="left" aria-label="Pan left">‹</button>'
+      + '<button type="button" data-zc="out" aria-label="Zoom out">−</button>'
+      + '<button type="button" data-zc="reset" aria-label="Reset zoom">⟲</button>'
+      + '<button type="button" data-zc="in" aria-label="Zoom in">+</button>'
+      + '<button type="button" data-zc="right" aria-label="Pan right">›</button>';
+    ctrl.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-zc]');
+      if (!b) return;
+      const z = b.dataset.zc;
+      if (z === 'in') charts.zoomBy(canvas.id, 1.4);
+      else if (z === 'out') charts.zoomBy(canvas.id, 1 / 1.4);
+      else if (z === 'left') charts.panBy(canvas.id, 80);
+      else if (z === 'right') charts.panBy(canvas.id, -80);
+      else charts.resetZoom(canvas.id);
+    });
+    card.appendChild(ctrl);
+  });
+  // Double-click/tap a chart also resets.
   ['chartTimeline', 'chartTst', 'chartQuality', 'chartScatter', 'chartExercise', 'chartSleepiness', 'chartTrackers']
     .forEach((id) => on(id, 'dblclick', () => charts.resetZoom(id)));
 
