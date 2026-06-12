@@ -10,9 +10,9 @@ import {
 //   Sleep onset latency (SOL) = bedtime → last attempt to sleep.
 //   WASO = minutes awake after first falling asleep (night awakenings).
 //   Total sleep time (TST) = time actually asleep
-//        = (sleepOnset → FINAL wake-up) − WASO, or the manually entered value.
-//        Final wake-up = out-of-bed when given, so sleeping in after a first wake
-//        is counted; any awake time in that window belongs in WASO.
+//        = (sleepOnset → when sleep ends) − WASO, or the manually entered value.
+//        "Sleep ends" = outOfBedTime when given (use it if you fell back asleep
+//        after a first wake), else wakeTime; any awake time in that window → WASO.
 //   Sleep efficiency = TST / TIB. Lying in bed awake (long SOL or WASO) lowers it.
 //   Naps are daytime sleep: kept OUT of nighttime efficiency, but added to a
 //        separate 24h total so you can see total sleep and nap's effect on drive.
