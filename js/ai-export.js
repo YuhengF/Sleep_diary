@@ -13,15 +13,20 @@ const LEGEND = {
     'A bedtime after midnight (e.g. 02:00) is that same wake-up day.',
   _scales: 'All 1–10 ratings are HIGHER = BETTER: quality, wakeEase, morningAlertness, ' +
     'and check-in level (alertness).',
-  _efficiency: 'Sleep efficiency = TST / TIB. TIB = bedtime→out-of-bed. ' +
-    'TST = (sleepOnset→wake) − WASO. Naps are daytime sleep, excluded from efficiency.',
+  _efficiency: 'Final wake-up = outOfBedTime (final get-up); if empty it falls back to ' +
+    'wakeTime. wakeTime is only the FIRST wake — total sleep is measured to the final ' +
+    'get-up so sleeping in is counted. TIB = bedtime→final get-up. ' +
+    'TST = (sleepOnset→final get-up) − WASO. Sleep efficiency = TST / TIB. ' +
+    'Naps are daytime sleep, excluded from efficiency.',
   _privacy: 'Dates are pseudonymized: shifted by a constant offset so real calendar dates ' +
     'are hidden while gaps between days and weekdays are preserved. Times of day are real.',
   _timezone: 'All clock times and check-in times are in the patient\'s local timezone ' +
     '(see settings.timezone). Stored timestamps are UTC; here they are already converted.',
   fields: {
     date: 'wake-up morning (pseudo)', alarmTime: 'HH:MM or null (no alarm)',
-    wakeTime: 'HH:MM', outOfBedTime: 'HH:MM', bedtime: 'HH:MM (prev evening or post-midnight)',
+    wakeTime: 'HH:MM — FIRST wake time only',
+    outOfBedTime: 'HH:MM — final get-up; end of sleep for TST/efficiency (empty ⇒ use wakeTime)',
+    bedtime: 'HH:MM (prev evening or post-midnight)',
     sleepOnset: 'HH:MM last attempt to sleep', waso: 'min awake during the night',
     napMinutes: 'daytime nap minutes', tstMinutes: 'manual total-sleep min, else null=computed',
     quality: '1–10', wakeEase: '1–10', morningAlertness: '1–10 (~1h after waking)',
