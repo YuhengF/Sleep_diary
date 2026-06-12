@@ -50,6 +50,7 @@ function baseOptions(extra = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false, // avoid replaying on the post-sync re-render (and snappier loads)
     indexAxis: extra.indexAxis,
     plugins: {
       legend: { labels: { color: AXIS, font: { size: 11 } } },
