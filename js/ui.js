@@ -408,6 +408,7 @@ export function fillSettings(settings, hasToken) {
   $('#f-default-alarm').value = settings.defaults.alarmTime || '08:00';
   $('#f-target-min').value = (settings.defaults.targetTstMin / 60).toFixed(1);
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
+  $('#f-naps-in-total').checked = settings.napsInTotal !== false;
   $('#f-loc-mode').value = settings.location.mode || 'geo';
   $('#f-manual-temp').value = settings.location.manualTempC ?? '';
   $('#f-timezone').value = settings.timezone || 'America/Los_Angeles';
@@ -429,6 +430,7 @@ export function readSettings(prev) {
   return {
     ...prev,
     timezone: $('#f-timezone').value || 'America/Los_Angeles',
+    napsInTotal: $('#f-naps-in-total').checked,
     aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
     includeNotes: $('#f-include-notes').checked,
     mottos: $('#f-mottos').value.split('\n').map((s) => s.trim()).filter(Boolean),

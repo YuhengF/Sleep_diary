@@ -147,31 +147,35 @@ export function renderTimeline(canvas, entries, settings) {
   }));
 }
 
-// TST trend line with a shaded target band.
+// TST trend with a shaded target band. Optionally adds a "night + naps (24h)" line.
 export function renderTstTrend(canvas, entries, settings) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   if (!entries.length) return noData(canvas);
   const labels = entries.map((e) => e.date.slice(5));
-  const tst = entries.map((e) => {
-    const m = computeNight(e, settings).tstMin;
-    return m == null ? null : Math.round((m / 60) * 10) / 10;
-  });
+  const hrs = (m) => (m == null ? null : Math.round((m / 60) * 10) / 10);
+  const tst = entries.map((e) => hrs(computeNight(e, settings).tstMin));
+  const incl = entries.map((e) => hrs(computeNight(e, settings).total24hMin));
   const tMin = (settings?.defaults?.targetTstMin ?? 510) / 60;
   const tMax = (settings?.defaults?.targetTstMax ?? 540) / 60;
 
+  const hasNap = entries.some((e) => (e.napMinutes || 0) > 0);
+  const showIncl = settings?.napsInTotal !== false && hasNap;
+
+  const datasets = [
+    { label: 'Target max', data: labels.map(() => tMax), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: BAND },
+    { label: 'Target min', data: labels.map(() => tMin), borderWidth: 0, pointRadius: 0, fill: false },
+    { label: 'Night sleep', data: tst, borderColor: ACCENT, backgroundColor: ACCENT, tension: 0.3, spanGaps: true, pointRadius: 3 },
+  ];
+  if (showIncl) {
+    datasets.push({ label: 'Night + naps (24h)', data: incl, borderColor: ACCENT2, backgroundColor: ACCENT2, borderDash: [5, 4], tension: 0.3, spanGaps: true, pointRadius: 3 });
+  }
+
   registry.set(canvas.id, new Chart(canvas, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Target max', data: labels.map(() => tMax), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: BAND },
-        { label: 'Target min', data: labels.map(() => tMin), borderWidth: 0, pointRadius: 0, fill: false },
-        { label: 'Total sleep (h)', data: tst, borderColor: ACCENT, backgroundColor: ACCENT, tension: 0.3, spanGaps: true, pointRadius: 3 },
-      ],
-    },
+    data: { labels, datasets },
     options: baseOptions({
-      plugins: { legend: { labels: { color: AXIS, filter: (i) => i.text === 'Total sleep (h)' } } },
+      plugins: { legend: { labels: { color: AXIS, filter: (i) => !i.text.startsWith('Target') } } },
       scales: {
         x: { ticks: { color: AXIS }, grid: { color: GRID } },
         y: { ticks: { color: AXIS }, grid: { color: GRID }, title: { display: true, text: 'hours', color: AXIS } },

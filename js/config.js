@@ -64,6 +64,8 @@ export const DEFAULT_SETTINGS = {
   timezone: 'America/Los_Angeles', // all timestamps stored as UTC, shown in this zone
   aiPrompt: DEFAULT_AI_PROMPT,
   includeNotes: true,
+  napsInTotal: true, // show the "night + naps (24h)" line on the sleep trend
+
   mottos: DEFAULT_MOTTOS,
   experiment: {
     active: false,
