@@ -139,6 +139,7 @@ export function fillForm(entry, settings) {
   $('#f-sunlight-time').value = e.sunlight?.time || '';
   $('#f-sunlight-min').value = e.sunlight?.minutes ?? '';
   $('#f-sunlight-total').value = e.sunlight?.totalMinutes ?? '';
+  $('#f-cold-face').checked = !!e.coldFaceWash;
   $('#f-exercise-start').value = e.exercise?.startTime || '';
   $('#f-exercise-dur').value = e.exercise?.durationMin ?? '';
   $('#f-dinner-time').value = e.dinner?.time || '';
@@ -168,6 +169,7 @@ export function readForm() {
     quality: getRating('quality'),
     wakeEase: getRating('wakeEase'),
     morningAlertness: getRating('morningAlertness'),
+    coldFaceWash: $('#f-cold-face').checked,
     bedtime: $('#f-bedtime').value || null,
     sleepOnset: $('#f-onset').value || null,
     waso: num($('#f-waso').value),
@@ -574,8 +576,8 @@ const DAYPART_META = {
 };
 export function setDaypartTheme(now = new Date()) {
   const h = now.getHours();
-  // Dark from 8pm; evening 20:00–24:00, night 00:00–08:00, then light day.
-  const part = h < 8 ? 'night' : h < 11 ? 'morning' : h < 20 ? 'day' : 'evening';
+  // Light (bright) from 7am; evening 20:00–24:00, night 00:00–07:00.
+  const part = h < 7 ? 'night' : h < 11 ? 'morning' : h < 20 ? 'day' : 'evening';
   document.documentElement.dataset.daypart = part;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', DAYPART_META[part].color);
