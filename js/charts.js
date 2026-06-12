@@ -47,6 +47,7 @@ function chartReady(canvas) {
 }
 
 function baseOptions(extra = {}) {
+  const mode = extra.zoom || 'xy';
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -55,10 +56,21 @@ function baseOptions(extra = {}) {
     plugins: {
       legend: { labels: { color: AXIS, font: { size: 11 } } },
       tooltip: { intersect: false, mode: 'index' },
+      // Drag to pan; wheel/pinch to zoom (Hammer.js powers touch). Double-click resets.
+      zoom: {
+        pan: { enabled: true, mode },
+        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode },
+      },
       ...(extra.plugins || {}),
     },
     scales: extra.scales || {},
   };
+}
+
+// Reset a chart's zoom/pan (wired to double-click in the controller).
+export function resetZoom(canvasId) {
+  const c = registry.get(canvasId);
+  if (c && typeof c.resetZoom === 'function') c.resetZoom();
 }
 
 function noData(canvas) {
@@ -265,7 +277,8 @@ export function renderExercise(canvas, entries) {
   }));
 }
 
-// Custom-tracker traces: one line per tracker, daily average score (1–10), by date.
+// Custom-tracker check-ins by hour-of-day (one series per tracker). Default 0–24h;
+// zoomable. Same time-of-day resolution as the daytime alertness plot.
 const TRACKER_COLORS = ['#f472b6', '#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185'];
 export function renderTrackers(canvas, logs, trackers, tz) {
   if (!chartReady(canvas)) return;
@@ -274,23 +287,23 @@ export function renderTrackers(canvas, logs, trackers, tz) {
   const rel = logs.filter((l) => keys.includes(l.type));
   if (!keys.length || !rel.length) return noData(canvas);
 
-  const dates = [...new Set(rel.map((l) => zonedDateStr(l.datetime, tz)))].sort();
-  const labels = dates.map((d) => d.slice(5));
   const datasets = keys.map((key, i) => {
-    const data = dates.map((d) => {
-      const vals = rel.filter((l) => l.type === key && zonedDateStr(l.datetime, tz) === d).map((l) => l.level);
-      return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
-    });
     const c = TRACKER_COLORS[i % TRACKER_COLORS.length];
-    return { label: key, data, borderColor: c, backgroundColor: c, tension: 0.3, spanGaps: true, pointRadius: 3 };
+    const data = rel.filter((l) => l.type === key).map((l) => ({
+      x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
+    }));
+    return { label: key, data, backgroundColor: c, pointRadius: 5 };
   });
 
   registry.set(canvas.id, new Chart(canvas, {
-    type: 'line',
-    data: { labels, datasets },
+    type: 'scatter',
+    data: { datasets },
     options: baseOptions({
+      plugins: {
+        tooltip: { callbacks: { label: (c) => `${c.dataset.label} ${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
+      },
       scales: {
-        x: { ticks: { color: AXIS }, grid: { color: GRID } },
+        x: { min: 0, max: 24, ticks: { color: AXIS, stepSize: 3, callback: (v) => `${v}:00` }, grid: { color: GRID }, title: { display: true, text: 'hour of day', color: AXIS } },
         y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
       },
     }),

@@ -16,6 +16,11 @@
     src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
     crossorigin="anonymous"
     referrerpolicy="no-referrer"></script>
+  <!-- Hammer.js (touch gestures) + zoom plugin for drag-pan and pinch/wheel zoom. -->
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
   <div class="motto-bar" id="mottoBar" aria-live="polite"></div>
@@ -56,6 +61,7 @@
         <div class="card chart-card" id="card-alertness"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
         <div class="card chart-card" id="card-trackers"><h4>Custom check-ins</h4><div class="chart-wrap"><canvas id="chartTrackers"></canvas></div></div>
       </div>
+      <p class="hint chart-hint">Drag to pan · scroll or pinch to zoom · double-click to reset.</p>
 
       <div class="card ask-ai">
         <h3 class="form-section">Ask an AI about your sleep</h3>

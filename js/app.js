@@ -412,6 +412,10 @@ function wire() {
     if (e.detail === 'log') { renderCalendar(); renderCheckins(); }
   });
 
+  // Double-click any chart to reset its zoom/pan.
+  ['chartTimeline', 'chartTst', 'chartQuality', 'chartScatter', 'chartExercise', 'chartSleepiness', 'chartTrackers']
+    .forEach((id) => on(id, 'dblclick', () => charts.resetZoom(id)));
+
   // Reconnect / focus → opportunistic sync.
   window.addEventListener('online', backgroundSync);
   document.addEventListener('visibilitychange', () => {
