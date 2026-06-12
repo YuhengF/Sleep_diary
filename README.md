@@ -1,5 +1,7 @@
 # Sleep Diary
 
+**▶ Open the app: https://yuhengf.github.io/Sleep_diary/**
+
 A clean, mobile- and desktop-friendly sleep diary web app you can run on GitHub Pages.
 It helps you log the factors that affect your sleep and shows doctor-style summary stats
 and charts so you can pinpoint patterns — ideally tracking **one factor at a time** over
