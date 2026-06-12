@@ -26,6 +26,7 @@ export function getSettings() {
     defaults: { ...DEFAULT_SETTINGS.defaults, ...(s.defaults || {}) },
     location: { ...DEFAULT_SETTINGS.location, ...(s.location || {}) },
     experiment: { ...DEFAULT_SETTINGS.experiment, ...(s.experiment || {}) },
+    charts: { ...DEFAULT_SETTINGS.charts, ...(s.charts || {}) },
   };
 }
 

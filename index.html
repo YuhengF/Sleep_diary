@@ -46,11 +46,13 @@
 
       <div class="cards" id="summaryCards"></div>
       <div class="chart-grid">
-        <div class="card chart-card"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
-        <div class="card chart-card"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
-        <div class="card chart-card"><h4>Quality &amp; morning alertness</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
+        <div class="card chart-card" id="card-timeline"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
+        <div class="card chart-card" id="card-tst"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
+        <div class="card chart-card" id="card-quality"><h4>Quality &amp; morning alertness</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>
         <div class="card chart-card" id="scatterCard"><h4 id="scatterTitle">Experiment</h4><div class="chart-wrap"><canvas id="chartScatter"></canvas></div></div>
-        <div class="card chart-card"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+        <div class="card chart-card" id="card-exercise"><h4>Exercise</h4><div class="chart-wrap"><canvas id="chartExercise"></canvas></div></div>
+        <div class="card chart-card" id="card-alertness"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+        <div class="card chart-card" id="card-trackers"><h4>Custom check-ins</h4><div class="chart-wrap"><canvas id="chartTrackers"></canvas></div></div>
       </div>
 
       <div class="card ask-ai">
@@ -202,6 +204,22 @@
         </div>
         <label class="field checkbox"><input type="checkbox" id="f-naps-in-total" /><span>Add a “night + naps (24h)” line to the sleep trend</span></label>
 
+        <h3 class="form-section">Custom quick check-ins</h3>
+        <p class="hint">One tracker per line (e.g. D, A). These are private — shown as trace plots but excluded from the AI export.</p>
+        <label class="field"><span>Trackers</span><textarea id="f-trackers" rows="2" placeholder="D&#10;A"></textarea></label>
+
+        <h3 class="form-section">Summary charts</h3>
+        <p class="hint">Choose which plots appear on the Summary page.</p>
+        <div class="chart-toggles">
+          <label class="field checkbox"><input type="checkbox" data-chart="timeline" /><span>Sleep timeline</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="tst" /><span>Total sleep vs target</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="quality" /><span>Quality &amp; alertness</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="scatter" /><span>Experiment scatter</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="exercise" /><span>Exercise</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="alertness" /><span>Daytime alertness</span></label>
+          <label class="field checkbox"><input type="checkbox" data-chart="trackers" /><span>Custom check-ins</span></label>
+        </div>
+
         <h3 class="form-section">Timezone</h3>
         <p class="hint">Timestamps are stored in UTC and shown in this zone, so check-in times stay consistent across devices.</p>
         <label class="field"><span>Your timezone</span>
@@ -254,8 +272,8 @@
     </section>
   </main>
 
-  <!-- Floating quick alertness check-in button -->
-  <button class="fab" id="fab-sleepiness" title="Log alertness now">＋ alertness</button>
+  <!-- Floating quick check-in button -->
+  <button class="fab" id="fab-sleepiness" title="Log a quick check-in now">＋ check-in</button>
 
   <!-- Bottom / top tab bar -->
   <nav class="tab-bar">
@@ -267,8 +285,9 @@
   <!-- Sleepiness modal -->
   <div class="modal-backdrop" id="sleepModal" hidden>
     <div class="modal card">
-      <h3>Quick alertness check</h3>
-      <div class="rating" data-key="alertness" id="sleepRating"></div>
+      <h3>Quick check-in</h3>
+      <p class="hint">Drag any scores you want to log right now; uncheck ones to skip.</p>
+      <div id="checkinForm" class="checkin-form"></div>
       <label class="field"><span>Note (optional)</span><input type="text" id="sleep-note" placeholder="e.g. post-lunch dip" /></label>
       <div class="form-actions">
         <button type="button" class="btn ghost" id="sleep-cancel">Cancel</button>

@@ -235,6 +235,68 @@ export function renderFactorScatter(canvas, corr, factorLabel, outcomeLabel) {
   }));
 }
 
+// Exercise: duration (min) per day, with start time in the tooltip.
+export function renderExercise(canvas, entries) {
+  if (!chartReady(canvas)) return;
+  destroyIfExists(canvas.id);
+  const rows = entries.filter((e) => e.exercise && e.exercise.durationMin);
+  if (!rows.length) return noData(canvas);
+  registry.set(canvas.id, new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: rows.map((e) => e.date.slice(5)),
+      datasets: [{
+        label: 'Exercise (min)',
+        data: rows.map((e) => e.exercise.durationMin),
+        backgroundColor: ACCENT2,
+        borderWidth: 0,
+        starts: rows.map((e) => e.exercise.startTime || '—'),
+      }],
+    },
+    options: baseOptions({
+      plugins: {
+        tooltip: { callbacks: { label: (c) => `${c.raw} min (start ${c.dataset.starts[c.dataIndex]})` } },
+      },
+      scales: {
+        x: { ticks: { color: AXIS }, grid: { color: GRID } },
+        y: { beginAtZero: true, ticks: { color: AXIS }, grid: { color: GRID }, title: { display: true, text: 'minutes', color: AXIS } },
+      },
+    }),
+  }));
+}
+
+// Custom-tracker traces: one line per tracker, daily average score (1–10), by date.
+const TRACKER_COLORS = ['#f472b6', '#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185'];
+export function renderTrackers(canvas, logs, trackers, tz) {
+  if (!chartReady(canvas)) return;
+  destroyIfExists(canvas.id);
+  const keys = (trackers || []).filter(Boolean);
+  const rel = logs.filter((l) => keys.includes(l.type));
+  if (!keys.length || !rel.length) return noData(canvas);
+
+  const dates = [...new Set(rel.map((l) => zonedDateStr(l.datetime, tz)))].sort();
+  const labels = dates.map((d) => d.slice(5));
+  const datasets = keys.map((key, i) => {
+    const data = dates.map((d) => {
+      const vals = rel.filter((l) => l.type === key && zonedDateStr(l.datetime, tz) === d).map((l) => l.level);
+      return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
+    });
+    const c = TRACKER_COLORS[i % TRACKER_COLORS.length];
+    return { label: key, data, borderColor: c, backgroundColor: c, tension: 0.3, spanGaps: true, pointRadius: 3 };
+  });
+
+  registry.set(canvas.id, new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: baseOptions({
+      scales: {
+        x: { ticks: { color: AXIS }, grid: { color: GRID } },
+        y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
+      },
+    }),
+  }));
+}
+
 // Free alertness check-ins by hour-of-day.
 export function renderSleepinessByHour(canvas, logs, tz) {
   if (!chartReady(canvas)) return;

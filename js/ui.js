@@ -361,16 +361,19 @@ export function renderCheckins(dateStr, logs, tz, handlers) {
   const host = $('#checkinList');
   if (!host) return;
   const title = $('#checkinTitle');
-  if (title) title.textContent = `Alertness check-ins · ${formatNice(dateStr)}`;
+  if (title) title.textContent = `Check-ins · ${formatNice(dateStr)}`;
 
   if (!logs.length) {
     host.innerHTML = '<div class="checkin-empty">No check-ins this day.</div>';
   } else {
     host.innerHTML = logs.map((l) => {
       const time = zonedTimeStr(l.datetime, tz);
+      const type = l.type || 'alertness';
+      const tag = type === 'alertness' ? 'A' : type;
       return `<div class="checkin-row" data-id="${l.id}" style="--rate-color:${ratingColor(l.level)}">
+        <span class="checkin-type" title="${type}">${tag}</span>
         <input type="time" class="checkin-time" value="${time}" data-edit="time" aria-label="Check-in time" />
-        <input type="range" class="checkin-score" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${l.level}" data-edit="level" aria-label="Alertness score" />
+        <input type="range" class="checkin-score" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${l.level}" data-edit="level" aria-label="Score" />
         <span class="checkin-val">${ratingLabelText(l.level)}</span>
         <button type="button" class="checkin-del" data-del aria-label="Delete check-in">✕</button>
       </div>`;
@@ -409,6 +412,9 @@ export function fillSettings(settings, hasToken) {
   $('#f-target-min').value = (settings.defaults.targetTstMin / 60).toFixed(1);
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
   $('#f-naps-in-total').checked = settings.napsInTotal !== false;
+  $('#f-trackers').value = (settings.trackers || []).join('\n');
+  const charts = settings.charts || {};
+  $$('[data-chart]').forEach((cb) => { cb.checked = charts[cb.dataset.chart] !== false; });
   $('#f-loc-mode').value = settings.location.mode || 'geo';
   $('#f-manual-temp').value = settings.location.manualTempC ?? '';
   $('#f-timezone').value = settings.timezone || 'America/Los_Angeles';
@@ -431,6 +437,8 @@ export function readSettings(prev) {
     ...prev,
     timezone: $('#f-timezone').value || 'America/Los_Angeles',
     napsInTotal: $('#f-naps-in-total').checked,
+    trackers: $('#f-trackers').value.split('\n').map((s) => s.trim()).filter(Boolean),
+    charts: Object.fromEntries($$('[data-chart]').map((cb) => [cb.dataset.chart, cb.checked])),
     aiPrompt: $('#f-ai-prompt').value.trim() || undefined,
     includeNotes: $('#f-include-notes').checked,
     mottos: $('#f-mottos').value.split('\n').map((s) => s.trim()).filter(Boolean),
@@ -455,24 +463,54 @@ export function readSettings(prev) {
   };
 }
 
-// ---- Alertness check-in modal ------------------------------------------------
+// ---- Quick check-in modal (one slider per tracker, logged together) ----------
 
-export function openSleepModal() {
-  setRating('alertness', RATING_DEFAULT);
+// Build a slider row per tracker (Alertness + customs). Each has an enable
+// checkbox so you can log just the ones you want in one go.
+export function buildCheckinForm(settings) {
+  const host = $('#checkinForm');
+  if (!host) return;
+  const keys = ['alertness', ...((settings.trackers || []).filter(Boolean))];
+  host.innerHTML = keys.map((key) => {
+    const label = key === 'alertness' ? SCALES.alertness.label : key;
+    return `<div class="ci-row" data-tracker="${key}" style="--rate-color:${ratingColor(RATING_DEFAULT)}">
+      <label class="ci-head">
+        <input type="checkbox" class="ci-enable" checked />
+        <span class="ci-name">${label}</span>
+        <span class="ci-val" data-out>${ratingLabelText(RATING_DEFAULT)}</span>
+      </label>
+      <input type="range" min="${RATING_MIN}" max="${RATING_MAX}" step="1" value="${RATING_DEFAULT}" data-range />
+    </div>`;
+  }).join('');
+  host.querySelectorAll('.ci-row').forEach((row) => {
+    const range = row.querySelector('[data-range]');
+    const out = row.querySelector('[data-out]');
+    const paint = () => { const v = +range.value; out.textContent = ratingLabelText(v); row.style.setProperty('--rate-color', ratingColor(v)); };
+    range.addEventListener('input', paint);
+    paint();
+  });
+}
+
+export function openSleepModal(settings) {
+  buildCheckinForm(settings);
   $('#sleep-note').value = '';
   $('#sleepModal').hidden = false;
 }
 export function closeSleepModal() { $('#sleepModal').hidden = true; }
 
-export function readSleepiness() {
-  return {
-    id: uuid(),
-    datetime: new Date().toISOString(),
-    level: getRating('alertness'),
-    note: $('#sleep-note').value.trim() || null,
-    _v2: true, // already on the alertness scale; never auto-invert
-    updatedAt: new Date().toISOString(),
-  };
+// Return one check-in per enabled tracker, all sharing the same timestamp + note.
+export function readCheckins() {
+  const now = new Date().toISOString();
+  const note = $('#sleep-note').value.trim() || null;
+  const logs = [];
+  $$('#checkinForm .ci-row').forEach((row) => {
+    if (!row.querySelector('.ci-enable').checked) return;
+    logs.push({
+      id: uuid(), datetime: now, type: row.dataset.tracker,
+      level: +row.querySelector('[data-range]').value, note, _v2: true, updatedAt: now,
+    });
+  });
+  return logs;
 }
 
 // ---- Chrome: tabs, toasts, sync status ---------------------------------------
@@ -533,7 +571,8 @@ const DAYPART_META = {
 };
 export function setDaypartTheme(now = new Date()) {
   const h = now.getHours();
-  const part = h < 6 ? 'night' : h < 11 ? 'morning' : h < 17 ? 'day' : h < 22 ? 'evening' : 'night';
+  // Dark from 8pm; evening 20:00–24:00, night 00:00–08:00, then light day.
+  const part = h < 8 ? 'night' : h < 11 ? 'morning' : h < 20 ? 'day' : 'evening';
   document.documentElement.dataset.daypart = part;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', DAYPART_META[part].color);

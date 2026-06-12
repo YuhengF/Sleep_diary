@@ -65,6 +65,11 @@ export const DEFAULT_SETTINGS = {
   aiPrompt: DEFAULT_AI_PROMPT,
   includeNotes: true,
   napsInTotal: true, // show the "night + naps (24h)" line on the sleep trend
+  // Custom quick check-in trackers (besides built-in Alertness). Private: excluded
+  // from the AI export. e.g. ["D", "A"].
+  trackers: [],
+  // Which summary charts are shown.
+  charts: { timeline: true, tst: true, quality: true, scatter: true, alertness: true, exercise: true, trackers: true },
 
   mottos: DEFAULT_MOTTOS,
   experiment: {

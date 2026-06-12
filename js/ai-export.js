@@ -61,7 +61,8 @@ function cleanEntry(e, shift, includeNotes) {
 export function buildPayload(question, settings) {
   const months = store.cachedMonthKeys();
   const entries = store.listEntries(months);
-  const checkins = store.listSleepiness(months);
+  // Only the built-in Alertness check-ins go to the AI; custom trackers are private.
+  const checkins = store.listSleepiness(months).filter((c) => (c.type || 'alertness') === 'alertness');
   const tz = settings.timezone || 'America/Los_Angeles';
 
   const allDates = [

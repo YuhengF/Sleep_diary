@@ -37,13 +37,32 @@ function renderSummaryView() {
   ui.renderComments(comments(sum, exp, corr));
   ui.renderExpBanner(settings, corr);
 
-  charts.renderTimeline(document.getElementById('chartTimeline'), entries, settings);
-  charts.renderTstTrend(document.getElementById('chartTst'), entries, settings);
-  charts.renderQualityTrend(document.getElementById('chartQuality'), entries);
-  charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), store.listSleepiness(visibleMonthKeys()), settings.timezone || 'America/Los_Angeles');
+  const tz = settings.timezone || 'America/Los_Angeles';
+  const allCheckins = store.listSleepiness(visibleMonthKeys());
+  const cfg = settings.charts || {};
+  const show = (cardId, on) => { const el = document.getElementById(cardId); if (el) el.hidden = !on; };
+
+  // Toggle which cards are visible, then render the visible ones.
+  show('card-timeline', cfg.timeline !== false);
+  show('card-tst', cfg.tst !== false);
+  show('card-quality', cfg.quality !== false);
+  show('card-exercise', cfg.exercise !== false);
+  show('card-alertness', cfg.alertness !== false);
+  show('card-trackers', cfg.trackers !== false && (settings.trackers || []).length > 0);
+
+  if (cfg.timeline !== false) charts.renderTimeline(document.getElementById('chartTimeline'), entries, settings);
+  if (cfg.tst !== false) charts.renderTstTrend(document.getElementById('chartTst'), entries, settings);
+  if (cfg.quality !== false) charts.renderQualityTrend(document.getElementById('chartQuality'), entries);
+  if (cfg.exercise !== false) charts.renderExercise(document.getElementById('chartExercise'), entries);
+  if (cfg.alertness !== false) {
+    charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), allCheckins.filter((l) => (l.type || 'alertness') === 'alertness'), tz);
+  }
+  if (cfg.trackers !== false && (settings.trackers || []).length) {
+    charts.renderTrackers(document.getElementById('chartTrackers'), allCheckins, settings.trackers, tz);
+  }
 
   const scatterCard = document.getElementById('scatterCard');
-  if (exp?.active) {
+  if (exp?.active && cfg.scatter !== false) {
     scatterCard.hidden = false;
     const outLabel = (exp.outcome || 'quality');
     document.getElementById('scatterTitle').textContent = `${exp.factorLabel} vs ${outLabel}`;
@@ -292,13 +311,15 @@ function onSaveSettings() {
 }
 
 function onSaveSleepiness() {
-  const log = ui.readSleepiness();
-  store.addSleepiness(log);
+  const logs = ui.readCheckins();
+  if (!logs.length) { ui.toast('Pick at least one tracker', 'error'); return; }
+  logs.forEach((l) => store.addSleepiness(l));
   ui.closeSleepModal();
-  ui.toast('Alertness logged', 'success');
+  ui.toast(`Logged ${logs.length} check-in${logs.length > 1 ? 's' : ''}`, 'success');
   renderSummaryView();
   renderCheckins();
-  syncAfterWrite(monthKeyOf(log.datetime.slice(0, 10)));
+  const tz = settings.timezone || 'America/Los_Angeles';
+  syncAfterWrite(monthKeyOf(zonedDateStr(logs[0].datetime, tz)));
 }
 
 async function onAiCopy() {
@@ -368,7 +389,7 @@ function wire() {
   on('f-tst-override', 'change', ui.updateTstHint);
 
   // Alertness check-in modal.
-  on('fab-sleepiness', 'click', ui.openSleepModal);
+  on('fab-sleepiness', 'click', () => ui.openSleepModal(settings));
   on('sleep-cancel', 'click', ui.closeSleepModal);
   on('sleep-save', 'click', onSaveSleepiness);
   on('sleepModal', 'click', (e) => { if (e.target.id === 'sleepModal') ui.closeSleepModal(); });

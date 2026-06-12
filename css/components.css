@@ -118,6 +118,17 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .comments li { position: relative; padding-left: var(--s4); font-size: 14px; color: var(--text-dim); }
 .comments li::before { content: "›"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
 
+/* ---- Quick check-in modal (multi-slider) ---- */
+.checkin-form { display: flex; flex-direction: column; gap: var(--s2); }
+.ci-row { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 12px; }
+.ci-head { display: flex; align-items: center; gap: var(--s2); }
+.ci-head .ci-enable { width: 18px; height: 18px; }
+.ci-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+.ci-val { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--rate-color, var(--accent)); white-space: nowrap; }
+
+/* ---- Settings: chart toggles ---- */
+.chart-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--s3); }
+
 /* ---- Ask AI ---- */
 .ask-ai { margin-top: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
 .ask-ai .form-section { margin: 0; }
@@ -186,8 +197,12 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .checkin-list { display: flex; flex-direction: column; gap: 6px; }
 .checkin-empty { color: var(--text-faint); font-size: 13px; padding: var(--s2) 0; }
 .checkin-row {
-  display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--s2);
+  display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: var(--s2);
   padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2);
+}
+.checkin-type {
+  font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--rate-color, var(--accent));
+  border-radius: var(--r-sm); padding: 2px 6px; min-width: 20px; text-align: center;
 }
 .checkin-row input[type="time"] { min-height: 36px; padding: 4px 6px; width: auto; }
 .checkin-row input[type="range"] { height: 24px; }
