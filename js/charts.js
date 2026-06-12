@@ -46,11 +46,6 @@ function chartReady(canvas) {
   return false;
 }
 
-// Touch devices: disable single-finger drag-pan (it fights page scroll + tap-to-
-// show-points); keep pinch-zoom. Desktop keeps wheel-zoom + drag-pan. X-axis only.
-const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia
-  && window.matchMedia('(pointer: coarse)').matches;
-
 function baseOptions(extra = {}) {
   return {
     responsive: true,
@@ -60,34 +55,10 @@ function baseOptions(extra = {}) {
     plugins: {
       legend: { labels: { color: AXIS, font: { size: 11 } } },
       tooltip: { intersect: false, mode: 'index' },
-      // Touch: no gestures at all (they fight scroll/taps) — use the on-chart
-      // −/+ buttons instead. Desktop: wheel-zoom + drag-pan. X-axis only.
-      zoom: {
-        pan: { enabled: !IS_TOUCH, mode: 'x' },
-        zoom: { wheel: { enabled: !IS_TOUCH }, pinch: { enabled: false }, mode: 'x' },
-      },
       ...(extra.plugins || {}),
     },
     scales: extra.scales || {},
   };
-}
-
-// Reset a chart's zoom/pan (wired to double-click in the controller).
-export function resetZoom(canvasId) {
-  const c = registry.get(canvasId);
-  if (c && typeof c.resetZoom === 'function') c.resetZoom();
-}
-
-// Programmatic x-axis zoom for the on-chart buttons (factor > 1 zooms in).
-export function zoomBy(canvasId, factor) {
-  const c = registry.get(canvasId);
-  if (c && typeof c.zoom === 'function') c.zoom({ x: factor });
-}
-
-// Programmatic x-axis pan (pixels) for the on-chart arrows.
-export function panBy(canvasId, px) {
-  const c = registry.get(canvasId);
-  if (c && typeof c.pan === 'function') c.pan({ x: px }, undefined, 'default');
 }
 
 function noData(canvas) {
