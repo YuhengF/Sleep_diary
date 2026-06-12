@@ -423,6 +423,15 @@ function wire() {
   });
 }
 
+// True when the page was freshly opened (navigation), not reloaded or back/forward.
+function isFreshOpen() {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav) return nav.type === 'navigate';
+    return performance.navigation ? performance.navigation.type === 0 : true;
+  } catch { return true; }
+}
+
 function init() {
   store.migrateScales(); // fix old (flipped) records; idempotent, re-runs after syncs
   ui.setDaypartTheme();
@@ -431,9 +440,9 @@ function init() {
   renderSummaryView();
   loadInitialLog();   // sets the date, then renders the calendar + check-ins
   updateStatusIdle();
-  // Fast path: pop the quick check-in immediately when the app opens (e.g. via a
-  // phone shortcut), so logging is one step. Toggle off in Settings.
-  if (settings.autoCheckin !== false) ui.openSleepModal(settings);
+  // Fast path: pop the quick check-in when the app is freshly opened (e.g. via a
+  // phone shortcut) — but not on a reload. Toggle off in Settings.
+  if (settings.autoCheckin !== false && isFreshOpen()) ui.openSleepModal(settings);
   backgroundSync(); // pull + flush if a token exists
   // Keep the theme in step with the clock (e.g. crossing into evening while open).
   setInterval(() => ui.setDaypartTheme(), 10 * 60 * 1000);
