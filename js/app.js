@@ -6,7 +6,7 @@ import * as charts from './charts.js';
 import { resolveBedroomTemp } from './weather.js';
 import * as ai from './ai-export.js';
 import { summarize, correlate, comments } from './stats.js';
-import { monthKeyOf, todayISO, debounce, zonedDateStr, zonedTimeStr, wallToUTC } from './util.js';
+import { monthKeyOf, todayISO, debounce, zonedDateStr, zonedTimeStr, wallToUTC, addDays, formatNice } from './util.js';
 
 let settings = store.getSettings();
 
@@ -173,6 +173,33 @@ function setDate(date) {
   loadDate(date);
   renderCalendar();
   renderCheckins();
+  updateLogMode();
+}
+
+// The wake-up date the user is most likely logging right now: this morning during
+// the day, or tonight's (tomorrow's wake) in the evening — so evening logging
+// targets the correct future entry instead of overwriting today's finished one.
+const EVENING_FROM = 18; // 6pm
+function defaultLogDate() {
+  return new Date().getHours() < EVENING_FROM ? todayISO() : addDays(todayISO(), 1);
+}
+
+// Highlight which quick-pick (This morning / Tonight) matches the selected date,
+// and show the resolved wake date on each.
+function updateLogMode() {
+  const date = document.getElementById('f-date').value;
+  const today = todayISO();
+  const tomorrow = addDays(today, 1);
+  const bm = document.getElementById('btn-this-morning');
+  const bt = document.getElementById('btn-tonight');
+  if (bm) {
+    bm.innerHTML = `☀️ This morning<small>${formatNice(today)}</small>`;
+    bm.classList.toggle('active', date === today);
+  }
+  if (bt) {
+    bt.innerHTML = `🌙 Tonight<small>wake ${formatNice(tomorrow)}</small>`;
+    bt.classList.toggle('active', date === tomorrow);
+  }
 }
 
 // Most recent logged date across cached months, or null.
@@ -181,9 +208,10 @@ function newestEntryDate() {
   return entries.length ? entries[entries.length - 1].date : null;
 }
 
-// On open: show the newest entry (or a new entry for today if none yet).
+// On open: default to the entry the user is most likely logging now (this morning
+// during the day, tonight's wake in the evening).
 function loadInitialLog() {
-  setDate(newestEntryDate() || todayISO());
+  setDate(defaultLogDate());
 }
 
 // Tap a recent entry → load it and bring the form into view.
@@ -381,6 +409,9 @@ function wire() {
   ui.fillSettings(settings, sync.hasToken());
 
   on('logForm', 'submit', onSave);
+  // Intent-based date picks so users never log tonight into today's finished entry.
+  on('btn-this-morning', 'click', () => setDate(todayISO()));
+  on('btn-tonight', 'click', () => setDate(addDays(todayISO(), 1)));
   // Reset discards unsaved edits: reload the saved entry, or blank if it's a new date.
   on('btn-clear', 'click', () => loadDate(document.getElementById('f-date').value));
   on('btn-temp', 'click', onAutoTemp);
