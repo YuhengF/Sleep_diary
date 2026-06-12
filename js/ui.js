@@ -140,6 +140,8 @@ export function fillForm(entry, settings) {
   $('#f-sunlight-min').value = e.sunlight?.minutes ?? '';
   $('#f-sunlight-total').value = e.sunlight?.totalMinutes ?? '';
   $('#f-cold-face').checked = !!e.coldFaceWash;
+  $('#f-shower').checked = !!e.showerAfterWake;
+  $('#f-morning-reward').value = e.morningReward || '';
   $('#f-awakenings').value = e.awakenings ?? '';
   $('#f-exercise-start').value = e.exercise?.startTime || '';
   $('#f-exercise-dur').value = e.exercise?.durationMin ?? '';
@@ -171,6 +173,8 @@ export function readForm() {
     wakeEase: getRating('wakeEase'),
     morningAlertness: getRating('morningAlertness'),
     coldFaceWash: $('#f-cold-face').checked,
+    showerAfterWake: $('#f-shower').checked,
+    morningReward: $('#f-morning-reward').value.trim() || null,
     bedtime: $('#f-bedtime').value || null,
     sleepOnset: $('#f-onset').value || null,
     waso: num($('#f-waso').value),
