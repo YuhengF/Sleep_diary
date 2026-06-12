@@ -46,8 +46,12 @@ function chartReady(canvas) {
   return false;
 }
 
+// Touch devices: disable single-finger drag-pan (it fights page scroll + tap-to-
+// show-points); keep pinch-zoom. Desktop keeps wheel-zoom + drag-pan. X-axis only.
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia
+  && window.matchMedia('(pointer: coarse)').matches;
+
 function baseOptions(extra = {}) {
-  const mode = extra.zoom || 'xy';
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -56,10 +60,9 @@ function baseOptions(extra = {}) {
     plugins: {
       legend: { labels: { color: AXIS, font: { size: 11 } } },
       tooltip: { intersect: false, mode: 'index' },
-      // Drag to pan; wheel/pinch to zoom (Hammer.js powers touch). Double-click resets.
       zoom: {
-        pan: { enabled: true, mode },
-        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode },
+        pan: { enabled: !IS_TOUCH, mode: 'x' },
+        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
       },
       ...(extra.plugins || {}),
     },
