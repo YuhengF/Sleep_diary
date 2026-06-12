@@ -53,9 +53,7 @@
 .app-main {
   max-width: var(--maxw);
   margin: 0 auto;
-  /* Extra bottom space so the floating check-in button clears the page's last
-     buttons (Save/Reset) above the bottom tab bar on mobile. */
-  padding: var(--s4) var(--s4) calc(var(--tabbar-h) + 5.5rem);
+  padding: var(--s4) var(--s4) calc(var(--tabbar-h) + var(--s6));
 }
 
 .tab-panel { display: block; }

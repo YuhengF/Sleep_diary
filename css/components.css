@@ -153,7 +153,10 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 /* ---- Charts ---- */
 .chart-card { position: relative; }
 .chart-card h4 { font-size: 13px; color: var(--text-dim); margin-bottom: var(--s2); }
-.chart-wrap { position: relative; height: 240px; touch-action: pan-y; } /* let the page scroll over charts on touch */
+/* Fixed height + clipped + absolutely-filled canvas so the chart can NEVER feed
+   its size back into layout (Chart.js responsive growth loop → infinite scroll). */
+.chart-wrap { position: relative; height: 240px; overflow: hidden; touch-action: pan-y; }
+.chart-wrap canvas { position: absolute; inset: 0; }
 .chart-zoom { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; }
 .chart-zoom button {
   width: 28px; height: 28px; border-radius: var(--r-sm); line-height: 1;
@@ -264,6 +267,8 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
   padding: 12px 18px; box-shadow: var(--shadow);
 }
 @media (min-width: 760px) { .fab { bottom: var(--s5); } }
+.fab { transition: opacity .2s ease, transform .2s ease; }
+.fab.fab-hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
 
 /* ---- Toast ---- */
 .toast-host { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + var(--s4)); z-index: 40; display: flex; flex-direction: column; gap: var(--s2); width: max-content; max-width: 90vw; }

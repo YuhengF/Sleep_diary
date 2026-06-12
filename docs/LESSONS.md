@@ -77,8 +77,32 @@ health data here; only engineering and product lessons.
     so the last content clears the FAB. *Lesson:* reserve bottom space for any fixed FAB/tab bar.
 
 14. **Chart pan/zoom fights mobile scroll + taps.** Single-finger drag-pan captured touch, blocking
-    page scroll and tap-to-show-point. *Fix:* on touch (`pointer: coarse`) disable drag-pan and keep
-    pinch-zoom; x-axis only; double-tap resets. *Lesson:* on touch, never enable single-finger pan.
+    page scroll and tap-to-show-point; pinch felt janky. *Fix:* disable all chart gestures on touch
+    (`pointer: coarse`), set `touch-action: pan-y` on the chart wrap so the page scrolls over charts,
+    and provide on-chart **−/+/‹/›/⟲ buttons** for x-axis zoom/pan. Desktop keeps wheel+drag.
+    *Lesson:* on touch, prefer explicit buttons over gesture hijacking.
+
+15. **Infinite page growth / endless scroll (Chart.js feedback loop).** Pages scrolled "infinitely"
+    and fixed bars drifted, because a responsive canvas with `maintainAspectRatio: false` can feed its
+    size back into layout (canvas grows → container grows → ResizeObserver → repeat). Also worsened by
+    over-large bottom padding added to clear a FAB. *Fix:* give the chart wrapper a **fixed height +
+    `overflow: hidden`** and make the **canvas `position: absolute; inset: 0`** so it can never affect
+    layout; keep page padding modest and hide the FAB near the bottom instead. *Lesson:* always pin a
+    responsive chart inside a fixed-size, overflow-clipped, relatively-positioned box.
+
+## Checklist for the next design task (distilled)
+- **Caching:** SW network-first with `cache: no-store`; never ask users to clear cache.
+- **Migrations:** idempotent, re-run after sync, version each record; a semantic data change IS a migration.
+- **Time:** store UTC, display via a configured timezone; never slice ISO strings.
+- **Charts:** fixed-height + `overflow:hidden` wrapper, absolute canvas; structural options (indexAxis,
+  zoom mode) at creation; **no single-finger gestures on touch** — use buttons.
+- **Fixed UI (tab bars, FABs):** opaque background, viewport-resize-safe indicator placement, reserve
+  space or hide near conflicting content; don't fix overlap with huge padding.
+- **CSS:** keep a rule's responsive overrides in the same file **after** its base (load-order bites).
+- **Popovers:** overlay (`position: absolute`), don't reflow the page.
+- **Privacy:** no tokens/PII/health specifics in committed code; pseudonymize on export; de-identify.
+- **Mobile-first:** native input sizing (`appearance: none` for time/date), single-column forms,
+  test scroll/tap over interactive widgets.
 
 ## Environment / ops gotchas (not app bugs)
 - Sandbox **network is allowlisted** — couldn't fetch a CDN to compute an SRI hash; don't

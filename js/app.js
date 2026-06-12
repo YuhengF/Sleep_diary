@@ -439,6 +439,18 @@ function wire() {
   ['chartTimeline', 'chartTst', 'chartQuality', 'chartScatter', 'chartExercise', 'chartSleepiness', 'chartTrackers']
     .forEach((id) => on(id, 'dblclick', () => charts.resetZoom(id)));
 
+  // Hide the floating check-in button when a page's bottom action buttons are on
+  // screen, so it never overlaps Save/Reset (no need for big bottom padding).
+  const fab = document.getElementById('fab-sleepiness');
+  if (fab && 'IntersectionObserver' in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => (e.isIntersecting ? seen.add(e.target) : seen.delete(e.target)));
+      fab.classList.toggle('fab-hidden', seen.size > 0);
+    });
+    document.querySelectorAll('.form-actions, .ask-actions').forEach((el) => io.observe(el));
+  }
+
   // Reconnect / focus → opportunistic sync.
   window.addEventListener('online', backgroundSync);
   document.addEventListener('visibilitychange', () => {
