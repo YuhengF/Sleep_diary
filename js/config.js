@@ -88,6 +88,8 @@ export const EXPERIMENT_FACTORS = [
   { path: 'sunlight.minutes', label: 'Morning sunlight (min)' },
   { path: 'sunlight.totalMinutes', label: 'Total sunlight (min)' },
   { path: 'coldFaceWash', label: 'Cold-water face wash' },
+  { path: 'awakenings', label: 'Night awakenings (count)' },
+  { path: 'waso', label: 'WASO (min awake)' },
   { path: 'exercise.durationMin', label: 'Exercise duration (min)' },
   { path: 'bedroomTempC', label: 'Bedroom temperature' },
   { path: 'caffeine.time', label: 'Caffeine timing' },
