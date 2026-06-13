@@ -110,10 +110,6 @@
         <div class="form-half" data-half="evening">
           <h3 class="form-section" id="sec-night">🌙 Yesterday &amp; bedtime</h3>
           <div class="form-row two">
-            <label class="field"><span>Bedtime <small class="field-day" id="bedtimeDay"></small></span><input type="time" id="f-bedtime" /></label>
-            <label class="field"><span>Last attempt to sleep <small class="field-day" id="onsetDay"></small></span><input type="time" id="f-onset" /></label>
-          </div>
-          <div class="form-row two">
             <label class="field"><span>Dinner time</span><input type="time" id="f-dinner-time" /></label>
             <div class="field">
               <span>Dinner amount</span>
@@ -137,6 +133,10 @@
               <div class="segmented" id="seg-melatonin" data-name="melatonin"></div>
             </div>
             <label class="field"><span>Melatonin time</span><input type="time" id="f-melatonin-time" /></label>
+          </div>
+          <div class="form-row two">
+            <label class="field"><span>Bedtime <small class="field-day" id="bedtimeDay"></small></span><input type="time" id="f-bedtime" /></label>
+            <label class="field"><span>Last attempt to sleep <small class="field-day" id="onsetDay"></small></span><input type="time" id="f-onset" /></label>
           </div>
           <div class="form-row two">
             <label class="field"><span>Total sunlight today (min)</span><input type="number" id="f-sunlight-total" min="0" step="5" inputmode="numeric" /></label>
@@ -165,13 +165,6 @@
           </div>
           <label class="field checkbox"><input type="checkbox" id="f-no-alarm" /><span>No alarm this day (woke naturally)</span></label>
           <div class="form-row two">
-            <label class="field"><span>Morning sunlight time</span><input type="time" id="f-sunlight-time" /></label>
-            <label class="field"><span>Morning sunlight (min) <small>(to wake)</small></span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
-          </div>
-          <label class="field checkbox"><input type="checkbox" id="f-cold-face" /><span>Washed face with cold water</span></label>
-          <label class="field checkbox"><input type="checkbox" id="f-shower" /><span>Showered after waking</span></label>
-          <label class="field"><span>Morning reward <small>(a fun thing to look forward to)</small></span><input type="text" id="f-morning-reward" placeholder="e.g. good coffee, a podcast" /></label>
-          <div class="form-row two">
             <label class="field"><span>Times woke during night</span><input type="number" id="f-awakenings" min="0" step="1" inputmode="numeric" placeholder="0" /></label>
             <label class="field"><span>Awake during night · WASO (min)</span><input type="number" id="f-waso" min="0" step="5" inputmode="numeric" placeholder="0" /></label>
           </div>
@@ -186,6 +179,13 @@
               <span>Enter manually</span>
             </label>
           </div>
+          <div class="form-row two">
+            <label class="field"><span>Morning sunlight time</span><input type="time" id="f-sunlight-time" /></label>
+            <label class="field"><span>Morning sunlight (min) <small>(to wake)</small></span><input type="number" id="f-sunlight-min" min="0" step="5" inputmode="numeric" /></label>
+          </div>
+          <label class="field checkbox"><input type="checkbox" id="f-cold-face" /><span>Washed face with cold water</span></label>
+          <label class="field checkbox"><input type="checkbox" id="f-shower" /><span>Showered after waking</span></label>
+          <label class="field"><span>Morning reward <small>(a fun thing to look forward to)</small></span><input type="text" id="f-morning-reward" placeholder="e.g. good coffee, a podcast" /></label>
         </div>
 
         <label class="field"><span>Notes</span><textarea id="f-notes" rows="2" placeholder="Anything else worth noting"></textarea></label>
