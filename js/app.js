@@ -55,10 +55,10 @@ function renderSummaryView() {
   if (cfg.quality !== false) charts.renderQualityTrend(document.getElementById('chartQuality'), entries);
   if (cfg.exercise !== false) charts.renderExercise(document.getElementById('chartExercise'), entries);
   if (cfg.alertness !== false) {
-    charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), allCheckins.filter((l) => (l.type || 'alertness') === 'alertness'), tz);
+    charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), allCheckins.filter((l) => (l.type || 'alertness') === 'alertness'), tz, settings);
   }
   if (cfg.trackers !== false && (settings.trackers || []).length) {
-    charts.renderTrackers(document.getElementById('chartTrackers'), allCheckins, settings.trackers, tz);
+    charts.renderTrackers(document.getElementById('chartTrackers'), allCheckins, settings.trackers, tz, settings);
   }
 
   const scatterCard = document.getElementById('scatterCard');

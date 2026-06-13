@@ -59,7 +59,7 @@ export const DEFAULT_MOTTOS = [
 // Defaults applied to new entries / fresh settings.
 export const DEFAULT_SETTINGS = {
   schemaVersion: 1,
-  defaults: { alarmTime: '08:00', targetTstMin: 510, targetTstMax: 540 }, // 8.5–9h
+  defaults: { alarmTime: '08:00', targetTstMin: 510, targetTstMax: 540, targetBedtime: '23:00', targetGetUp: '07:30' }, // 8.5–9h band; intended bed/up times
   location: { mode: 'geo', lat: null, lon: null, manualTempC: null },
   timezone: 'America/Los_Angeles', // all timestamps stored as UTC, shown in this zone
   aiPrompt: DEFAULT_AI_PROMPT,

@@ -33,17 +33,74 @@ function destroyIfExists(id) {
   if (prev) { prev.destroy(); registry.delete(id); }
 }
 
+// Inline plugin: draw dashed vertical reference lines at given x-axis values
+// (chart.options.plugins.vlines.lines = [{ x, label }]). Used for target bedtime
+// / get-up markers. No external dependency.
+const vLinesPlugin = {
+  id: 'vlines',
+  afterDatasetsDraw(chart, _args, opts) {
+    const lines = opts && opts.lines;
+    const xScale = chart.scales.x;
+    if (!lines || !lines.length || !xScale) return;
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    for (const ln of lines) {
+      const px = xScale.getPixelForValue(ln.x);
+      if (px == null || px < chartArea.left - 0.5 || px > chartArea.right + 0.5) continue;
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = AXIS;
+      ctx.moveTo(px, chartArea.top);
+      ctx.lineTo(px, chartArea.bottom);
+      ctx.stroke();
+      if (ln.label) {
+        ctx.setLineDash([]);
+        ctx.fillStyle = AXIS;
+        ctx.font = '10px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(ln.label, px, chartArea.top + 9);
+      }
+    }
+    ctx.restore();
+  },
+};
+let vlinesRegistered = false;
+
+// Target bedtime / get-up reference lines for time charts.
+//   mode 'anchor' = minutes after 18:00 (timeline); 'hour' = 0–24 (by-hour charts).
+export function targetLines(settings, mode) {
+  const d = settings && settings.defaults ? settings.defaults : {};
+  const toX = (hhmm) => {
+    const m = toMinutes(hhmm);
+    if (m == null) return null;
+    if (mode === 'hour') return m / 60;
+    let x = m - 18 * 60;
+    if (x < 0) x += 1440;
+    return x;
+  };
+  const lines = [];
+  const b = toX(d.targetBedtime);
+  if (b != null) lines.push({ x: b, label: '🛏' });
+  const u = toX(d.targetGetUp);
+  if (u != null) lines.push({ x: u, label: '⏰' });
+  return lines;
+}
+
 // True when the Chart.js global is available; otherwise draws a fallback note.
 function chartReady(canvas) {
   refreshTheme();
-  if (typeof Chart !== 'undefined') return true;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = AXIS;
-  ctx.font = '13px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Charts need an internet connection', canvas.width / 2, canvas.height / 2);
-  return false;
+  if (typeof Chart === 'undefined') {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = AXIS;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Charts need an internet connection', canvas.width / 2, canvas.height / 2);
+    return false;
+  }
+  if (!vlinesRegistered) { Chart.register(vLinesPlugin); vlinesRegistered = true; }
+  return true;
 }
 
 function baseOptions(extra = {}) {
@@ -125,6 +182,7 @@ export function renderTimeline(canvas, entries, settings) {
     options: baseOptions({
       indexAxis: 'y',
       plugins: {
+        vlines: { lines: targetLines(settings, 'anchor') },
         tooltip: {
           callbacks: {
             label: (c) => {
@@ -268,7 +326,7 @@ export function renderExercise(canvas, entries) {
 // Custom-tracker check-ins by hour-of-day (one series per tracker). Default 0–24h;
 // zoomable. Same time-of-day resolution as the daytime alertness plot.
 const TRACKER_COLORS = ['#f472b6', '#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185'];
-export function renderTrackers(canvas, logs, trackers, tz) {
+export function renderTrackers(canvas, logs, trackers, tz, settings) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   const keys = (trackers || []).filter(Boolean);
@@ -288,6 +346,7 @@ export function renderTrackers(canvas, logs, trackers, tz) {
     data: { datasets },
     options: baseOptions({
       plugins: {
+        vlines: { lines: targetLines(settings, 'hour') },
         tooltip: { callbacks: { label: (c) => `${c.dataset.label} ${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
       },
       scales: {
@@ -299,7 +358,7 @@ export function renderTrackers(canvas, logs, trackers, tz) {
 }
 
 // Free alertness check-ins by hour-of-day.
-export function renderSleepinessByHour(canvas, logs, tz) {
+export function renderSleepinessByHour(canvas, logs, tz, settings) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   if (!logs.length) return noData(canvas);
@@ -311,6 +370,7 @@ export function renderSleepinessByHour(canvas, logs, tz) {
     data: { datasets: [{ label: 'Alertness', data: points, backgroundColor: ACCENT2, pointRadius: 5 }] },
     options: baseOptions({
       plugins: {
+        vlines: { lines: targetLines(settings, 'hour') },
         tooltip: { callbacks: { label: (c) => `${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — level ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
       },
       scales: {

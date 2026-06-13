@@ -421,6 +421,8 @@ export function fillSettings(settings, hasToken) {
   $('#f-target-min').value = (settings.defaults.targetTstMin / 60).toFixed(1);
   $('#f-target-max').value = (settings.defaults.targetTstMax / 60).toFixed(1);
   $('#f-naps-in-total').checked = settings.napsInTotal !== false;
+  $('#f-target-bed').value = settings.defaults.targetBedtime || '';
+  $('#f-target-up').value = settings.defaults.targetGetUp || '';
   $('#f-trackers').value = (settings.trackers || []).join('\n');
   $('#f-auto-checkin').checked = settings.autoCheckin !== false;
   const charts = settings.charts || {};
@@ -457,6 +459,8 @@ export function readSettings(prev) {
       alarmTime: $('#f-default-alarm').value || '08:00',
       targetTstMin: Math.round((isNaN(tMin) ? 8.5 : tMin) * 60),
       targetTstMax: Math.round((isNaN(tMax) ? 9 : tMax) * 60),
+      targetBedtime: $('#f-target-bed').value || null,
+      targetGetUp: $('#f-target-up').value || null,
     },
     location: {
       ...prev.location,
