@@ -1,6 +1,6 @@
 // charts.js — Chart.js (UMD global `Chart`) rendering. Registry avoids "canvas in use".
 import { computeNight } from './stats.js';
-import { toMinutes, toHHMM, fmtDuration, zonedHourFloat, zonedDateStr } from './util.js';
+import { toMinutes, toHHMM, fmtDuration, zonedHourFloat, zonedDateStr, todayISO, addDays } from './util.js';
 
 const registry = new Map();
 
@@ -298,6 +298,15 @@ export function renderExercise(canvas, entries) {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   const rows = entries.filter((e) => e.exercise && e.exercise.durationMin);
+
+  // 7-day total (today and the previous 6 days), shown in the card heading.
+  const weekAgo = addDays(todayISO(), -6);
+  const total7 = rows
+    .filter((e) => e.date >= weekAgo && e.date <= todayISO())
+    .reduce((s, e) => s + (e.exercise.durationMin || 0), 0);
+  const totalEl = document.getElementById('exerciseTotal');
+  if (totalEl) totalEl.textContent = `· last 7 days: ${fmtDuration(total7)}`;
+
   if (!rows.length) return noData(canvas);
   registry.set(canvas.id, new Chart(canvas, {
     type: 'bar',
