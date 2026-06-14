@@ -343,11 +343,12 @@ export function renderTrackers(canvas, logs, trackers, tz, settings, win = '7d')
   if (!keys.length || !rel.length) return noData(canvas);
 
   const r = win === '7d' ? 3.5 : 6;
+  const ax = checkinXAxis(win, settings);
   const datasets = keys.map((key, i) => {
     const c = TRACKER_COLORS[i % TRACKER_COLORS.length];
     const pts = rel.filter((l) => l.type === key);
     const data = pts.map((l) => ({
-      x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
+      x: checkinX(l, tz, win), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
     }));
     return { label: key, data, pointBackgroundColor: recencyColors(pts, tz, c), pointBorderWidth: 0, pointRadius: r, pointHoverRadius: r + 2 };
   });
@@ -357,11 +358,11 @@ export function renderTrackers(canvas, logs, trackers, tz, settings, win = '7d')
     data: { datasets },
     options: baseOptions({
       plugins: {
-        vlines: { lines: targetLines(settings, 'hour') },
-        tooltip: { callbacks: { label: (c) => `${c.dataset.label} ${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
+        vlines: { lines: ax.lines },
+        tooltip: { callbacks: { label: (c) => checkinTooltip(c, true) } },
       },
       scales: {
-        x: { min: 0, max: 24, ticks: { color: AXIS, stepSize: 3, callback: (v) => `${v}:00` }, grid: { color: GRID }, title: { display: true, text: 'hour of day', color: AXIS } },
+        x: ax.scale,
         y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
       },
     }),
@@ -387,16 +388,52 @@ function recencyColors(pts, tz, hex) {
   return pts.map((l) => hexToRgba(hex, alpha(zonedDateStr(l.datetime, tz))));
 }
 
-// Alertness check-ins by hour-of-day, windowed (1d / 7d). Smaller, recency-faded
-// points in 7d so day-to-day patterns read cleanly.
+const WIN_START = () => addDays(todayISO(), -6);
+function shortDate(iso) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+}
+// X for a check-in: hour-of-day (1d) or compressed 7-day timeline hours (7d).
+function checkinX(l, tz, win) {
+  const h = zonedHourFloat(l.datetime, tz);
+  if (win === '1d') return h;
+  const dayIdx = Math.round((Date.parse(zonedDateStr(l.datetime, tz)) - Date.parse(WIN_START())) / 86400000);
+  return dayIdx * 24 + h;
+}
+// X-axis config + reference lines for a check-in chart, by window.
+function checkinXAxis(win, settings) {
+  if (win === '1d') {
+    return {
+      scale: { min: 0, max: 24, ticks: { color: AXIS, stepSize: 3, callback: (v) => `${v}:00` }, grid: { color: GRID }, title: { display: true, text: 'hour of day', color: AXIS } },
+      lines: targetLines(settings, 'hour'),
+    };
+  }
+  const start = WIN_START();
+  return {
+    scale: {
+      min: 0, max: 7 * 24,
+      ticks: { color: AXIS, stepSize: 24, callback: (v) => shortDate(addDays(start, Math.round(v / 24))) },
+      grid: { color: GRID }, title: { display: true, text: 'last 7 days', color: AXIS },
+    },
+    lines: [], // no bedtime/get-up lines on the multi-day timeline
+  };
+}
+function checkinTooltip(c, withLabel) {
+  const hr = ((c.raw.x % 24) + 24) % 24;
+  const hh = String(Math.floor(hr)).padStart(2, '0');
+  const mm = String(Math.round((hr - Math.floor(hr)) * 60)).padStart(2, '0');
+  const lead = withLabel ? `${c.dataset.label} ` : '';
+  return `${lead}${c.raw.date} ${hh}:${mm} — ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}`;
+}
+
+// Alertness check-ins: 1d = hour-of-day for the latest day; 7d = compressed
+// continuous 7-day timeline. Points fade by recency; smaller in 7d.
 export function renderSleepinessByHour(canvas, logs, tz, settings, win = '7d') {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   const pts = windowLogs(logs, tz, win);
   if (!pts.length) return noData(canvas);
-  const data = pts.map((l) => ({
-    x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
-  }));
+  const ax = checkinXAxis(win, settings);
+  const data = pts.map((l) => ({ x: checkinX(l, tz, win), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz) }));
   const r = win === '7d' ? 3.5 : 6;
   registry.set(canvas.id, new Chart(canvas, {
     type: 'scatter',
@@ -404,11 +441,11 @@ export function renderSleepinessByHour(canvas, logs, tz, settings, win = '7d') {
     options: baseOptions({
       plugins: {
         legend: { display: false },
-        vlines: { lines: targetLines(settings, 'hour') },
-        tooltip: { callbacks: { label: (c) => `${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — level ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
+        vlines: { lines: ax.lines },
+        tooltip: { callbacks: { label: (c) => checkinTooltip(c, false) } },
       },
       scales: {
-        x: { min: 0, max: 24, ticks: { color: AXIS, stepSize: 3, callback: (v) => `${v}:00` }, grid: { color: GRID }, title: { display: true, text: 'hour of day', color: AXIS } },
+        x: ax.scale,
         y: { min: 1, max: 10, ticks: { color: AXIS, stepSize: 1 }, grid: { color: GRID } },
       },
     }),
