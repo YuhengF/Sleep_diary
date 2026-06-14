@@ -335,19 +335,21 @@ export function renderExercise(canvas, entries) {
 // Custom-tracker check-ins by hour-of-day (one series per tracker). Default 0–24h;
 // zoomable. Same time-of-day resolution as the daytime alertness plot.
 const TRACKER_COLORS = ['#f472b6', '#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185'];
-export function renderTrackers(canvas, logs, trackers, tz, settings) {
+export function renderTrackers(canvas, logs, trackers, tz, settings, win = '7d') {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
   const keys = (trackers || []).filter(Boolean);
-  const rel = logs.filter((l) => keys.includes(l.type));
+  const rel = windowLogs(logs, tz, win).filter((l) => keys.includes(l.type));
   if (!keys.length || !rel.length) return noData(canvas);
 
+  const r = win === '7d' ? 3.5 : 6;
   const datasets = keys.map((key, i) => {
     const c = TRACKER_COLORS[i % TRACKER_COLORS.length];
-    const data = rel.filter((l) => l.type === key).map((l) => ({
+    const pts = rel.filter((l) => l.type === key);
+    const data = pts.map((l) => ({
       x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
     }));
-    return { label: key, data, backgroundColor: c, pointRadius: 5 };
+    return { label: key, data, pointBackgroundColor: recencyColors(pts, tz, c), pointBorderWidth: 0, pointRadius: r, pointHoverRadius: r + 2 };
   });
 
   registry.set(canvas.id, new Chart(canvas, {
@@ -366,19 +368,42 @@ export function renderTrackers(canvas, logs, trackers, tz, settings) {
   }));
 }
 
-// Free alertness check-ins by hour-of-day.
-export function renderSleepinessByHour(canvas, logs, tz, settings) {
+// Window check-ins: '1d' = the most recent day with data; '7d' = last 7 days.
+function windowLogs(logs, tz, win) {
+  if (!logs.length) return [];
+  if (win === '1d') {
+    const dates = [...new Set(logs.map((l) => zonedDateStr(l.datetime, tz)))].sort();
+    const day = dates[dates.length - 1];
+    return logs.filter((l) => zonedDateStr(l.datetime, tz) === day);
+  }
+  const today = todayISO();
+  const from = addDays(today, -6);
+  return logs.filter((l) => { const d = zonedDateStr(l.datetime, tz); return d >= from && d <= today; });
+}
+// Per-point colors faded by recency (older = lighter) so days separate visually.
+function recencyColors(pts, tz, hex) {
+  const dates = [...new Set(pts.map((l) => zonedDateStr(l.datetime, tz)))].sort();
+  const alpha = (d) => (dates.length <= 1 ? 1 : 0.4 + 0.6 * (dates.indexOf(d) / (dates.length - 1)));
+  return pts.map((l) => hexToRgba(hex, alpha(zonedDateStr(l.datetime, tz))));
+}
+
+// Alertness check-ins by hour-of-day, windowed (1d / 7d). Smaller, recency-faded
+// points in 7d so day-to-day patterns read cleanly.
+export function renderSleepinessByHour(canvas, logs, tz, settings, win = '7d') {
   if (!chartReady(canvas)) return;
   destroyIfExists(canvas.id);
-  if (!logs.length) return noData(canvas);
-  const points = logs.map((l) => ({
+  const pts = windowLogs(logs, tz, win);
+  if (!pts.length) return noData(canvas);
+  const data = pts.map((l) => ({
     x: zonedHourFloat(l.datetime, tz), y: l.level, note: l.note, date: zonedDateStr(l.datetime, tz),
   }));
+  const r = win === '7d' ? 3.5 : 6;
   registry.set(canvas.id, new Chart(canvas, {
     type: 'scatter',
-    data: { datasets: [{ label: 'Alertness', data: points, backgroundColor: ACCENT2, pointRadius: 5 }] },
+    data: { datasets: [{ label: 'Alertness', data, pointBackgroundColor: recencyColors(pts, tz, ACCENT2), pointBorderWidth: 0, pointRadius: r, pointHoverRadius: r + 2 }] },
     options: baseOptions({
       plugins: {
+        legend: { display: false },
         vlines: { lines: targetLines(settings, 'hour') },
         tooltip: { callbacks: { label: (c) => `${c.raw.date} ${String(Math.floor(c.raw.x)).padStart(2, '0')}:00 — level ${c.raw.y}${c.raw.note ? ` (${c.raw.note})` : ''}` } },
       },

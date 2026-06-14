@@ -48,8 +48,12 @@
 
       <div class="cards" id="summaryCards"></div>
       <div class="chart-grid">
-        <div class="card chart-card" id="card-alertness"><h4>Daytime alertness</h4><div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
-        <div class="card chart-card" id="card-trackers"><h4>Custom check-ins</h4><div class="chart-wrap"><canvas id="chartTrackers"></canvas></div></div>
+        <div class="card chart-card" id="card-alertness"><h4>Daytime alertness</h4>
+          <div class="win-toggle"><button type="button" data-win="1d">1d</button><button type="button" data-win="7d">7d</button></div>
+          <div class="chart-wrap"><canvas id="chartSleepiness"></canvas></div></div>
+        <div class="card chart-card" id="card-trackers"><h4>Custom check-ins</h4>
+          <div class="win-toggle"><button type="button" data-win="1d">1d</button><button type="button" data-win="7d">7d</button></div>
+          <div class="chart-wrap"><canvas id="chartTrackers"></canvas></div></div>
         <div class="card chart-card" id="card-timeline"><h4>Sleep timeline</h4><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
         <div class="card chart-card" id="card-tst"><h4>Total sleep vs target</h4><div class="chart-wrap"><canvas id="chartTst"></canvas></div></div>
         <div class="card chart-card" id="card-quality"><h4>Quality &amp; morning alertness</h4><div class="chart-wrap"><canvas id="chartQuality"></canvas></div></div>

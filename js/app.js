@@ -9,6 +9,7 @@ import { summarize, correlate, comments } from './stats.js';
 import { monthKeyOf, todayISO, debounce, zonedDateStr, zonedTimeStr, wallToUTC, addDays, formatNice } from './util.js';
 
 let settings = store.getSettings();
+let checkinWindow = '7d'; // check-in plots window: '1d' or '7d'
 
 // ---- Data window helpers -----------------------------------------------------
 
@@ -55,10 +56,10 @@ function renderSummaryView() {
   if (cfg.quality !== false) charts.renderQualityTrend(document.getElementById('chartQuality'), entries);
   if (cfg.exercise !== false) charts.renderExercise(document.getElementById('chartExercise'), entries);
   if (cfg.alertness !== false) {
-    charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), allCheckins.filter((l) => (l.type || 'alertness') === 'alertness'), tz, settings);
+    charts.renderSleepinessByHour(document.getElementById('chartSleepiness'), allCheckins.filter((l) => (l.type || 'alertness') === 'alertness'), tz, settings, checkinWindow);
   }
   if (cfg.trackers !== false && (settings.trackers || []).length) {
-    charts.renderTrackers(document.getElementById('chartTrackers'), allCheckins, settings.trackers, tz, settings);
+    charts.renderTrackers(document.getElementById('chartTrackers'), allCheckins, settings.trackers, tz, settings, checkinWindow);
   }
 
   const scatterCard = document.getElementById('scatterCard');
@@ -423,6 +424,16 @@ function wire() {
   on('btn-save-settings', 'click', onSaveSettings);
   on('commentsToggle', 'click', toggleComments);
   on('attribToggle', 'click', toggleAttrib);
+
+  // Check-in window toggles (1d / 7d) — shared across both check-in charts.
+  document.querySelectorAll('.win-toggle button').forEach((b) => {
+    b.classList.toggle('active', b.dataset.win === checkinWindow);
+    b.addEventListener('click', () => {
+      checkinWindow = b.dataset.win;
+      document.querySelectorAll('.win-toggle button').forEach((x) => x.classList.toggle('active', x.dataset.win === checkinWindow));
+      renderSummaryView();
+    });
+  });
   on('aiCopy', 'click', onAiCopy);
   on('aiDownload', 'click', onAiDownload);
   on('f-no-alarm', 'change', ui.onAlarmToggle);

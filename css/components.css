@@ -152,6 +152,12 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 
 /* ---- Charts ---- */
 .chart-card { position: relative; }
+.win-toggle { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; }
+.win-toggle button {
+  padding: 3px 9px; font-size: 11px; font-weight: 700; line-height: 1;
+  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-dim); border-radius: var(--r-sm);
+}
+.win-toggle button.active { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .chart-card h4 { font-size: 13px; color: var(--text-dim); margin-bottom: var(--s2); }
 /* Fixed height + clipped + absolutely-filled canvas so the chart can NEVER feed
    its size back into layout (Chart.js responsive growth loop → infinite scroll). */
